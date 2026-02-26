@@ -25,6 +25,7 @@
                 <li data-section="sets">套裝指南</li>
                 <li data-section="rings">戒指鑑定</li>
                 <li data-section="charms">咒符與奇物</li>
+                <li data-section="diagnosis">✨ 智慧診斷 (BETA)</li>
             </ul>
             <div class="sidebar-footer">
                 <p>Version 2.7+ Updated</p>
@@ -32,8 +33,30 @@
         </nav>
 
         <!-- Main Content Area -->
-        <main class="content">
-            <header class="top-bar">
+        <main class="content-area">
+            <section id="diagnosis-section" class="hidden">
+                <div class="diagnosis-container">
+                    <div class="diagnosis-header">
+                        <h2>智慧截圖診斷 (BETA)</h2>
+                        <p>在遊戲中截圖 (Win+Shift+S)，回到此處直接 <strong>Ctrl + V</strong> 貼上即可開始診斷。</p>
+                    </div>
+                    <div id="drop-zone" class="drop-zone">
+                        <div class="drop-zone-content">
+                            <i class="icon-paste"></i>
+                            <span>點擊此處後貼上截圖 (Ctrl+V)</span>
+                        </div>
+                        <img id="preview-img" class="hidden" alt="Screenshot Preview">
+                    </div>
+                    <div id="diagnosis-result" class="diagnosis-result hidden">
+                        <div class="result-header">🔍 診斷分析中...</div>
+                        <div class="result-body" id="result-body">
+                            <!-- Analysis content will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <header class="content-header">
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
                     <input type="text" id="search-input" placeholder="搜尋裝備名稱或屬性...">
