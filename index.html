@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D2R 數位圖書館 | 裝備保留指南</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <span class="icon">⚔️</span>
+                <h1>D2R Library</h1>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-section="uniques">暗金裝備</li>
+                <li data-section="bases">有價底材</li>
+                <li data-section="runewords">符文組 (2.4+)</li>
+                <li data-section="sets">套裝指南</li>
+                <li data-section="rings">戒指鑑定</li>
+                <li data-section="charms">咒符與奇物</li>
+                <li data-section="stash">倉庫診斷</li>
+            </ul>
+            <div class="sidebar-footer">
+                <p>Version 2.7+ Updated</p>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content">
+            <header class="top-bar">
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="搜尋裝備名稱或屬性...">
+                </div>
+                <div class="user-info">
+                    <span class="status-badge">Online</span>
+                </div>
+            </header>
+
+            <section id="main-view">
+                <div class="section-header">
+                    <h2 id="section-title">暗金裝備保留指南</h2>
+                    <p id="section-desc">整理遊戲中值得保留的暗金裝備，標註關鍵屬性與建議數值。</p>
+                </div>
+
+                <div id="card-grid" class="grid-container">
+                    <!-- Cards will be injected here by JS -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
