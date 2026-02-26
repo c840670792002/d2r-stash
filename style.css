@@ -184,13 +184,15 @@ footer {
 }
 
 /* Main Content Styling */
-.content {
+.content-area {
     flex-grow: 1;
     margin-left: 260px;
     padding: 2rem;
+    min-width: 0;
+    /* Prevent flex overflow */
 }
 
-.top-bar {
+.content-header {
     display: flex;
     justify-content: space-between;
     align-items: center;

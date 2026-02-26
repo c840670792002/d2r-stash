@@ -64,21 +64,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const diagnosisResult = document.getElementById('diagnosis-result');
     const resultBody = document.getElementById('result-body');
 
+    const mainView = document.getElementById('main-view');
+
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
             navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
             currentSection = link.getAttribute('data-section');
+            searchInput.value = '';
 
             // Toggle Visibility
             if (currentSection === 'diagnosis') {
                 diagnosisSection.classList.remove('hidden');
                 contentHeader.classList.add('hidden');
-                cardGrid.classList.add('hidden');
+                mainView.classList.add('hidden');
             } else {
                 diagnosisSection.classList.add('hidden');
                 contentHeader.classList.remove('hidden');
-                cardGrid.classList.remove('hidden');
+                mainView.classList.remove('hidden');
                 renderItems();
             }
         });
