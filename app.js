@@ -53,8 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Initial State Check
+    // Navigation Elements
+    const diagnosisSection = document.getElementById('diagnosis-section');
+    const contentHeader = document.querySelector('.content-header');
+    const dropZone = document.getElementById('drop-zone');
+    const previewImg = document.getElementById('preview-img');
+    const diagnosisResult = document.getElementById('diagnosis-result');
+    const resultBody = document.getElementById('result-body');
+    const mainView = document.getElementById('main-view');
+
+    // Visibility Logic
     function updateVisibility() {
+        if (!diagnosisSection || !contentHeader || !mainView) return;
+
         if (currentSection === 'diagnosis') {
             diagnosisSection.classList.remove('hidden');
             contentHeader.classList.add('hidden');
@@ -69,75 +80,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial render
     updateVisibility();
-    const diagnosisSection = document.getElementById('diagnosis-section');
-    const contentHeader = document.querySelector('.content-header');
-    const dropZone = document.getElementById('drop-zone');
-    const previewImg = document.getElementById('preview-img');
-    const diagnosisResult = document.getElementById('diagnosis-result');
-    const resultBody = document.getElementById('result-body');
 
-    const mainView = document.getElementById('main-view');
+    // Navigation Logic
+    link.addEventListener('click', () => {
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        currentSection = link.getAttribute('data-section');
+        searchInput.value = '';
 
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-            currentSection = link.getAttribute('data-section');
-            searchInput.value = '';
-
-            // Toggle Visibility
-            if (currentSection === 'diagnosis') {
-                diagnosisSection.classList.remove('hidden');
-                contentHeader.classList.add('hidden');
-                mainView.classList.add('hidden');
-            } else {
-                diagnosisSection.classList.add('hidden');
-                contentHeader.classList.remove('hidden');
-                mainView.classList.remove('hidden');
-                renderItems();
-            }
-        });
-    });
-
-    // --- Smart Diagnosis Logic ---
-    window.addEventListener('paste', (e) => {
-        if (currentSection !== 'diagnosis') return;
-
-        console.log('Paste event detected');
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        let foundImage = false;
-
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-                foundImage = true;
-                const blob = items[i].getAsFile();
-                const reader = new FileReader();
-
-                // Show immediate feedback
-                resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在讀取截圖數據...</p></div>';
-                diagnosisResult.classList.remove('hidden');
-
-                reader.onload = (event) => {
-                    previewImg.src = event.target.result;
-                    previewImg.classList.remove('hidden');
-                    document.querySelector('.drop-zone-content').classList.add('hidden');
-                    startAnalysis();
-                };
-                reader.onerror = () => {
-                    resultBody.innerHTML = '<div class="analysis-item"><p>❌ 讀取圖片失敗，請再試一次。</p></div>';
-                };
-                reader.readAsDataURL(blob);
-            }
-        }
-
-        if (!foundImage) {
-            console.log('No image found in clipboard');
+        // Toggle Visibility
+        if (currentSection === 'diagnosis') {
+            diagnosisSection.classList.remove('hidden');
+            contentHeader.classList.add('hidden');
+            mainView.classList.add('hidden');
+        } else {
+            diagnosisSection.classList.add('hidden');
+            contentHeader.classList.remove('hidden');
+            mainView.classList.remove('hidden');
+            renderItems();
         }
     });
+});
 
-    function startAnalysis() {
-        diagnosisResult.classList.remove('hidden');
-        resultBody.innerHTML = `
+// --- Smart Diagnosis Logic ---
+window.addEventListener('paste', (e) => {
+    if (currentSection !== 'diagnosis') return;
+
+    console.log('Paste event detected');
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    let foundImage = false;
+
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            foundImage = true;
+            const blob = items[i].getAsFile();
+            const reader = new FileReader();
+
+            // Show immediate feedback
+            resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在讀取截圖數據...</p></div>';
+            diagnosisResult.classList.remove('hidden');
+
+            reader.onload = (event) => {
+                previewImg.src = event.target.result;
+                previewImg.classList.remove('hidden');
+                document.querySelector('.drop-zone-content').classList.add('hidden');
+                startAnalysis();
+            };
+            reader.onerror = () => {
+                resultBody.innerHTML = '<div class="analysis-item"><p>❌ 讀取圖片失敗，請再試一次。</p></div>';
+            };
+            reader.readAsDataURL(blob);
+        }
+    }
+
+    if (!foundImage) {
+        console.log('No image found in clipboard');
+    }
+});
+
+function startAnalysis() {
+    diagnosisResult.classList.remove('hidden');
+    resultBody.innerHTML = `
             <div class="analysis-item">
                 <p>📸 <span class="analysis-label">截圖已接收</span></p>
                 <p>由於網頁端權限限制，請將此截圖同步發送給 <strong>Antigravity (AI 助理)</strong>。</p>
@@ -151,10 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p style="margin-top: 1rem; color: var(--gold-bright);">請直接在對話框中貼上截圖，我會立刻為你分析！</p>
             </div>
         `;
-    }
+}
 
-    // Search Logic
-    searchInput.addEventListener('input', (e) => {
-        renderItems(e.target.value);
-    });
+// Search Logic
+searchInput.addEventListener('input', (e) => {
+    renderItems(e.target.value);
+});
 });
