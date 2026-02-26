@@ -88,14 +88,23 @@ const D2R_MATCHER = {
 
                     const bestSim = Math.max(sim, bestSubSim);
 
-                    if (bestSim >= 0.75) {
+                    // Dynamic threshold: top line allows massive typos (40%), bottom lines demand accuracy (75%)
+                    let threshold = 0.75;
+                    if (line.index === 0) threshold = 0.40;
+                    else if (line.index === 1) threshold = 0.50;
+                    else if (line.index === 2) threshold = 0.60;
+
+                    if (bestSim >= threshold) {
                         // High similarity match (allows typos)
                         let lineBonus = isFirstLine ? 1000000 : 50000;
-                        if (bestSim === 1.0) {
+                        if (bestSim >= 0.99) {
                             lineBonus = isFirstLine ? 1500000 : 80000;
                         }
 
-                        const score = (lineBonus * Math.pow(bestSim, 2)) + (alias.length * 1000);
+                        // Exponential length bonus to strictly prevent 2-char noise from overturning 4-char items
+                        const lengthBonus = Math.pow(alias.length, 2.5) * 500;
+
+                        const score = (lineBonus * Math.pow(bestSim, 2)) + lengthBonus;
                         if (score > currentAliasScore) {
                             currentAliasScore = score;
                             matchedLineIdx = line.index;
@@ -105,7 +114,7 @@ const D2R_MATCHER = {
 
                 // 2. Full Text Substring (Fallback)
                 if (currentAliasScore < 8000 && cleanFullText.includes(alias)) {
-                    currentAliasScore = Math.max(currentAliasScore, 8000 + (alias.length * 100));
+                    currentAliasScore = Math.max(currentAliasScore, 8000 + (Math.pow(alias.length, 2) * 100));
                 }
 
                 if (currentAliasScore > itemEntryMaxScore) {
