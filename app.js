@@ -141,12 +141,31 @@ function initApp() {
         }
 
         const result = D2R_MATCHER.match(rawText, lines);
+        const bestMatch = result.item;
+        const matchIsGlobal = result.isGlobal;
+        const isGuideItem = !!(bestMatch && !matchIsGlobal);
 
-        if (result) {
-            const bestMatch = result.item;
-            const matchIsGlobal = result.isGlobal;
-            const isGuideItem = !matchIsGlobal;
+        let debugHtml = '';
+        if (result.details) {
+            debugHtml = `
+                <details style="margin-top:1rem; font-size:11px; opacity:0.6;">
+                    <summary>🔍 辨識細節 (Debug Info)</summary>
+                    <div style="background:#000; padding:10px; margin-top:5px; border-radius:4px;">
+                        <p><strong>OCR 提取行：</strong></p>
+                        <ul style="padding-left:15px; color:#aaa;">
+                            ${result.rawLines.map(l => `<li>[行${l.index}] ${l.clean}</li>`).join('')}
+                        </ul>
+                        <p><strong>前 5 名匹配候選：</strong></p>
+                        <table style="width:100%; border-collapse:collapse;">
+                            <tr style="border-bottom:1px solid #333;"><td>名稱</td><td>分數</td><td>類型</td></tr>
+                            ${result.details.slice(0, 5).map(d => `<tr><td>${d.name}</td><td>${Math.round(d.score)}</td><td>${d.isGlobal ? '全量' : '指南'}</td></tr>`).join('')}
+                        </table>
+                    </div>
+                </details>
+            `;
+        }
 
+        if (bestMatch) {
             resultBody.innerHTML = `
                 <div class="analysis-item">
                     <p><span class="analysis-label">識別結果：</span><span class="${isGuideItem ? 'status-keep' : ''}">${bestMatch.name.split(' (')[0]}</span></p>
@@ -156,6 +175,7 @@ function initApp() {
                         <hr style="opacity: 0.1; margin: 0.5rem 0;">
                         <p><span class="analysis-label">筆記：</span>${bestMatch.note}</p>
                     </div>
+                    ${debugHtml}
                 </div>
             `;
         } else {
@@ -163,6 +183,7 @@ function initApp() {
                 <div class="analysis-item">
                     <p>🔍 <span class="analysis-label">未匹配到特定裝備</span></p>
                     <p>未能清晰辨識。請確保截圖清晰且包含完整的品名。</p>
+                    ${debugHtml}
                 </div>
             `;
         }

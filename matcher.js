@@ -14,7 +14,6 @@ const D2R_MATCHER = {
         const normalizedFullText = rawText.replace(/\s+/g, '');
         const cleanFullText = normalizedFullText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
 
-        // Structure lines with basic cleanup
         const structuredLines = lines.map((l, index) => {
             const clean = l.text.replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
             return { clean, original: l.text.trim(), index };
@@ -23,6 +22,7 @@ const D2R_MATCHER = {
         let bestMatch = null;
         let maxScore = 0;
         let matchIsGlobal = false;
+        let matchDetails = [];
 
         const calculateScore = (itemEntry, isGlobal = false) => {
             const itemName = typeof itemEntry === 'string' ? itemEntry : itemEntry.name;
@@ -30,66 +30,76 @@ const D2R_MATCHER = {
             const aliasParts = cleanItemName.split('/').map(n => n.trim().replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '')).filter(n => n.length >= 2);
 
             let itemEntryMaxScore = 0;
+            let bestAlias = "";
 
             aliasParts.forEach(alias => {
                 let currentAliasScore = 0;
 
-                // 1. Line-based Matching (Aggressive Priority)
+                // 1. Line-based Matching
                 structuredLines.slice(0, 8).forEach(line => {
                     const lineText = line.clean;
                     if (lineText === alias) {
-                        // Perfect match in a line
-                        const lineBonus = (line.index < 3) ? 100000 : 30000; // Total dominance for top lines
+                        const lineBonus = (line.index < 3) ? 100000 : 30000;
                         currentAliasScore = Math.max(currentAliasScore, lineBonus + (alias.length * 1000));
                     } else if (lineText.includes(alias) || alias.includes(lineText)) {
                         const shorter = Math.min(alias.length, lineText.length);
                         const longer = Math.max(alias.length, lineText.length);
                         const overlap = shorter / longer;
 
-                        if (overlap >= 0.6) {
+                        if (overlap >= 0.7) {
                             const lineBonus = (line.index < 3) ? 50000 : 10000;
                             currentAliasScore = Math.max(currentAliasScore, (lineBonus * overlap) + (alias.length * 500));
                         }
                     }
                 });
 
-                // 2. Full Text Substring (Fallback)
-                if (currentAliasScore < 5000 && cleanFullText.includes(alias)) {
-                    // Item names rarely match purely as a substring outside of lines unless OCR failed line breaks
-                    currentAliasScore = Math.max(currentAliasScore, 5000 + (alias.length * 50));
+                // 2. Full Text Substring
+                if (currentAliasScore < 8000 && cleanFullText.includes(alias)) {
+                    currentAliasScore = Math.max(currentAliasScore, 8000 + (alias.length * 100));
                 }
 
-                if (currentAliasScore > itemEntryMaxScore) itemEntryMaxScore = currentAliasScore;
+                if (currentAliasScore > itemEntryMaxScore) {
+                    itemEntryMaxScore = currentAliasScore;
+                    bestAlias = alias;
+                }
             });
 
             // --- Numeric vs Text Content Ratio Penalty ---
-            // If the item name is predominantly numeric/symbols (like "3/20/20")
-            // but the top of the OCR is predominantly Chinese, heavily penalize.
             const alphanumericCount = (itemName.match(/[a-zA-Z0-9]/g) || []).length;
             const totalCount = itemName.length;
-            const isNumericHeavy = (alphanumericCount / totalCount) > 0.4; // 40%+ numbers/letters (common in stats)
+            const isNumericHeavy = (alphanumericCount / totalCount) > 0.4;
 
-            if (isNumericHeavy) {
+            if (isNumericHeavy && itemEntryMaxScore < 30000) {
                 const topLinesContent = structuredLines.slice(0, 3).map(l => l.clean).join('');
-                const topHasStrongChinese = (topLinesContent.match(/[\u4e00-\u9fa5]/g) || []).length >= 3;
-                const nameHasFewerChinese = (itemName.match(/[\u4e00-\u9fa5]/g) || []).length <= 2;
-
-                if (topHasStrongChinese && nameHasFewerChinese) {
-                    itemEntryMaxScore -= 60000; // Absolute shutdown for numeric items when title is Chinese
+                const topHasStrongChinese = (topLinesContent.match(/[\u4e00-\u9fa5]/g) || []).length >= 2;
+                if (topHasStrongChinese) {
+                    itemEntryMaxScore -= 60000;
                 }
             }
 
-            if (isGlobal) itemEntryMaxScore *= 0.8;
-            return itemEntryMaxScore;
+            if (isGlobal) itemEntryMaxScore *= 0.9;
+            return { score: itemEntryMaxScore, alias: bestAlias };
+        };
+
+        const addCandidate = (item, result, isGlobal) => {
+            if (result.score > 1000) { // Only log meaningful matches
+                matchDetails.push({
+                    name: typeof item === 'string' ? item : item.name,
+                    score: result.score,
+                    isGlobal,
+                    alias: result.alias
+                });
+            }
         };
 
         // Pass 1: Guide
         if (typeof D2R_DATA !== 'undefined') {
             for (let section in D2R_DATA) {
                 D2R_DATA[section].items.forEach(item => {
-                    const score = calculateScore(item, false);
-                    if (score > maxScore && score > 0) {
-                        maxScore = score;
+                    const res = calculateScore(item, false);
+                    addCandidate(item, res, false);
+                    if (res.score > maxScore) {
+                        maxScore = res.score;
                         bestMatch = item;
                         matchIsGlobal = false;
                     }
@@ -100,20 +110,29 @@ const D2R_MATCHER = {
         // Pass 2: Global
         if (typeof D2R_ALL_UNIQUES !== 'undefined') {
             D2R_ALL_UNIQUES.forEach(name => {
-                const score = calculateScore(name, true);
-                if (score > maxScore && score > 0) {
-                    maxScore = score;
+                const res = calculateScore(name, true);
+                addCandidate(name, res, true);
+                if (res.score > maxScore) {
+                    maxScore = res.score;
                     bestMatch = {
                         name: name,
                         tag: 'none',
                         stats: '這是一件獨特 (暗金) 裝備，但「保留指南」中未列出具體數值基準。',
-                        note: '這通常代表該裝備屬於過渡性質，或市場價值較低。建議自用或販售給 NPC。'
+                        note: '這通常表示該裝備雖具獨特性，但在中後期刷寶中價值較低，或屬於拓荒性質裝備。'
                     };
                     matchIsGlobal = true;
                 }
             });
         }
 
-        return bestMatch ? { item: bestMatch, isGlobal: matchIsGlobal, score: maxScore } : null;
+        matchDetails.sort((a, b) => b.score - a.score);
+
+        return bestMatch ? {
+            item: bestMatch,
+            isGlobal: matchIsGlobal,
+            score: maxScore,
+            details: matchDetails.slice(0, 10),
+            rawLines: structuredLines
+        } : { details: matchDetails.slice(0, 10), rawLines: structuredLines };
     }
 };
