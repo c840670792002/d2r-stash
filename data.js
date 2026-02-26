@@ -12,36 +12,39 @@ const D2R_DATA = {
             { category: "戒指", name: "拿各的戒指 (拿各 | 飾品)", stats: "MF 25%~30%", note: "30% 滿值才有交易價值。", tag: "special" },
             { category: "戒指", name: "喬丹之石 (喬丹 | 飾品)", stats: "必留", note: "法系神戒，召喚地表暗黑標的物。", tag: "high" },
             { category: "戒指", name: "烏鴉之霜 (烏鴉 | 飾品)", stats: "敏捷 20 / 準確 240+", note: "無法冰凍，敏捷/準確滿值最貴。", tag: "keep" },
-            { category: "戒指", name: "布爾凱索的婚戒 (布戒 | BK / 婚戒)", stats: "技能、吸血", note: "物理系常用技能戒。又稱布爾凱索之戒。", tag: "keep" },
+            { category: "戒指", name: "布爾凱索的婚戒 (布戒 | BK / 婚戒)", stats: "+1 技能、吸血", note: "物理系常用技能戒。又稱布爾凱索之戒。", tag: "keep" },
+            { category: "戒指", name: "矮人之星 (矮人 | 飾品)", stats: "40生命 / 15%吸火 / 100%EG", note: "打錢/吸火神器。", tag: "keep" },
+            { category: "戒指", name: "鬼火投射者 (鬼火 | 飾品)", stats: "10-20% 吸電 / MF", note: "吸電與打寶神器，打極端電系怪必備。", tag: "high" },
+            { category: "戒指", name: "大自然和平 (飾品 | 戒指)", stats: "消滅怪物回歸平靜", note: "刷尼拉塞克打key必備裝。", tag: "keep" },
             { category: "珠寶", name: "彩虹刻面 (彩虹刻面 | 飾品)", stats: "5/5 滿值 / 電系", note: "電系最貴；「死珠」優於「生珠」。", tag: "high" },
 
             // 盾牌
-            { category: "盾牌", name: "摩西的祝福之環 (圓盾 | 卓越)", stats: "2 洞", note: "鑲嵌鑽石後為過渡神器。", tag: "special" },
+            { category: "盾牌", name: "暴風之盾 (統治者大盾 | 統盾)", stats: "35% 物理減傷", note: "俗稱統盾。法系與格擋流必備減傷神器。", tag: "keep" },
             { category: "盾牌", name: "警戒之牆 (冷酷盾牌 | 卓越)", stats: "+1 全技能", note: "副手配戰招首選，低力量需求。", tag: "special" },
-            { category: "盾牌", name: "黑橡樹盾 (月亮盾 | 精華)", stats: "冰冷吸收、高敏捷", note: "克制冰系專用。", tag: "special" },
-            { category: "盾牌", name: "獵頭人的榮耀 (洞察之盾 | 精華)", stats: "3 洞 (滿洞)", note: "抗毒越高越好，具備交易價值。", tag: "special" },
             { category: "盾牌", name: "撒卡蘭姆的使者 (飾金盾牌 | 卓越)", stats: "180%+ ED / 無形", note: "飾金盾，190%+ 為優質。", tag: "high" },
             { category: "盾牌", name: "魔胎 (祭司印記 | 卓越)", stats: "180%~200% ED", note: "必留死靈盾，200% ED 最貴。", tag: "keep" },
+            { category: "盾牌", name: "獵頭人的榮耀 (洞察之盾 | 精華)", stats: "3 洞 (滿洞)", note: "抗毒越高越好，具備交易價值。", tag: "special" },
             { category: "盾牌", name: "魔力造生 (血之王頭骨 | 精華)", stats: "3/3/3 技能", note: "極稀有，三系皆 3 才有高價值。", tag: "high" },
-            { category: "盾牌", name: "塔亞馬特的斥責 (龍盾 | 卓越)", stats: "全抗 35% (滿值)", note: "俗稱龍盾。極優過渡與元素傷害盾。", tag: "special" },
 
             // 頭盔
-            { category: "頭盔", name: "吸血鬼目光 (死神面具 | 卓越)", stats: "減傷 15% / 雙吸", note: "傭兵或物理職業頂級減傷選。", tag: "keep" },
-            { category: "頭盔", name: "諧角之冠 (軍帽 | 精華)", stats: "防禦 141 (滿值)", note: "俗稱軍帽。後期刷寶標配。", tag: "keep" },
+            { category: "頭盔", name: "吸血鬼目光 (死神面具 | 卓越)", stats: "減傷 15% / 雙吸 / 無形", note: "傭兵或物理職業頂級減傷選。", tag: "keep" },
+            { category: "頭盔", name: "諧角之冠 (軍帽 | 精華)", stats: "防禦 141 (滿值)", note: "俗稱軍帽。後期刷寶 (MF) 標配。", tag: "keep" },
             { category: "頭盔", name: "安達利爾的面貌 (惡魔頭蓋骨面具)", stats: "無形 / 10%吸血 / 30力", note: "俗稱安頭。傭兵終極神裝。", tag: "high" },
             { category: "頭盔", name: "盜賊皇冠 (盜賊黃冠 | 莊嚴王冠)", stats: "12% 吸血 / 100% 打錢", note: "打錢野蠻人與傭兵優質選。", tag: "keep" },
-            { category: "武器", name: "光之軍刀 (幻化之刃)", stats: "20% 攻速 / 忽視目標防禦", note: "攻速極快，拓荒好物。", tag: "keep" },
-            { category: "戒指", name: "矮人之星 (40生命 / 15%吸火)", stats: "40生命 / 15%吸火 / 100%EG", note: "打錢/吸火神器。", tag: "keep" },
             { category: "頭盔", name: "格里風之眼 (權冠)", stats: "-20%電抗 / +15%電傷", note: "電系終極頭盔，極品天價。", tag: "high" },
             { category: "頭盔", name: "亞瑞特的面容 (殺手防護面具)", stats: "180%+ ED / 6%吸血", note: "俗稱飛機頭。無形版身價極高。", tag: "keep" },
             { category: "頭盔", name: "奇拉的守護 (三重冠)", stats: "抗性 65 以上", note: "無法冰凍，打火炬或給傭兵。", tag: "special" },
-            { category: "頭盔", name: "夜翼面紗 (巨角頭盔)", stats: "必留", note: "冰系極品頭盔，頂 15% 冰傷最貴。", tag: "keep" },
+            { category: "頭盔", name: "夜翼面紗 (巨角頭盔)", stats: "頂 15% 冰傷", note: "冰系極品頭盔，頂 15% 冰傷最貴。", tag: "keep" },
+            { category: "頭盔", name: "歲月之冠 / 年紀之冠 (頭冠)", stats: "2 洞 / 15% 減傷 / 30 全抗", note: "滿洞高數值為天價。", tag: "high" },
+
+            // 盔甲
             { category: "盔甲", name: "海蛇皮甲 (蛇皮綢緞甲 | 卓越)", stats: "全抗 35 / 魔法減傷 13", note: "法系畢業級，35抗滿值最優。", tag: "keep" },
-            { category: "盔甲", name: "都瑞爾的殼 (護胸甲 | 卓越)", stats: "無形 (Eth)", note: "無法冰凍，無形版為傭兵神裝。", tag: "keep" },
+            { category: "盔甲", name: "都瑞爾的殼 (護胸甲 | 卓越)", stats: "無形 (Eth) / 高 ED", note: "無法冰凍，無形版為傭兵神裝。", tag: "keep" },
             { category: "盔甲", name: "謝夫特斯得 (網眼甲 | 卓越)", stats: "無形 / 220% ED", note: "30% 減傷，無形高防版天價。", tag: "high" },
             { category: "盔甲", name: "斯寇德的憤怒 (羅瑟戰甲 | 卓越)", stats: "無形 / 高防", note: "頂級 MF 裝，無形具自動修復。", tag: "special" },
             { category: "盔甲", name: "泰瑞爾的力量 (神聖戰甲 | 精華)", stats: "必留 (收藏用)", note: "最稀有暗金，最具觀賞價值。", tag: "收藏" },
             { category: "盔甲", name: "黃金之皮 (全面皮甲 | 卓越)", stats: "150% ED / 35全抗", note: "100%打錢與高全抗。", tag: "special" },
+            { category: "盔甲", name: "守護天使 (聖堂武士外衣 | 卓越)", stats: "無形 / 高 ED", note: "增加最大抗性，傭兵打崔凡克 (打錢) 保命神甲。", tag: "keep" },
 
             // 手套、腰帶與鞋子
             { category: "手套", name: "運氣守護 (鎖鏈手套 | 普通)", stats: "MF 35%~40%", note: "40% 頂值具交易價值。", tag: "keep" },
@@ -53,36 +56,39 @@ const D2R_DATA = {
             { category: "腰帶", name: "蜘蛛之網 (蛛網腰帶 | 精華)", stats: "110%+ ED", note: "法系畢業裝。", tag: "high" },
             { category: "腰帶", name: "黃金裹腰 (戰鬥腰帶 | 拓荒)", stats: "10% 攻速 / 30% MF", note: "打寶神腰帶，升級至精英版更佳。", tag: "keep" },
             { category: "腰帶", name: "維爾登戈的心結 (秘銀腰帶 | 精華)", stats: "15% 減傷 / 40 體力", note: "15/40 數值最頂。", tag: "high" },
+            { category: "腰帶", name: "剃刀之尾 (鯊皮腰帶 | 卓越)", stats: "150% ED (滿值)", note: "內建穿刺，弓馬與標馬最終畢業腰帶。", tag: "keep" },
             { category: "鞋子", name: "戰爭旅者 (戰場之靴 | 卓越)", stats: "MF 45%~50%", note: "50% 滿值為極品。", tag: "high" },
             { category: "鞋子", name: "蝕肉騎士 (巨戰之靴 | 卓越)", stats: "180%+ ED", note: "物理職業必備神鞋。", tag: "keep" },
             { category: "鞋子", name: "沙暴之旅 (聖甲蟲殼靴 | 精華)", stats: "無形 / 15力/體", note: "無形 15/15 價值最高。", tag: "high" },
             { category: "鞋子", name: "骨髓行走 (骸骨靴 | 精華)", stats: "+2 支配骷髏", note: "必留 +2 技能版本。", tag: "special" },
+            { category: "鞋子", name: "水上飄 (鯊皮之靴 | 卓越)", stats: "65 生命", note: "提供海量生命，法系強勢過渡鞋。", tag: "special" },
+            { category: "鞋子", name: "紗織 (織網之靴 | 卓越)", stats: "每次擊殺 +5 法力", note: "標馬熱門鞋子，續航力極佳。", tag: "keep" },
 
-            // 武器
-            { category: "武器", name: "眼球 (渦流水晶 | 卓越)", stats: "必留", note: "初期神器。", tag: "keep" },
-            { category: "武器", name: "死亡深度 (次元碎片 | 精華)", stats: "冰傷 20%~30%", note: "冰法終極天價武器。", tag: "high" },
-            { category: "武器", name: "死亡之網 (破隱法杖 | 精華)", stats: "+2 技 / -50% 毒抗", note: "毒系死靈天價神兵。", tag: "high" },
-            { category: "武器", name: "里奧瑞克王的手骨 (古墓之杖 | 卓越)", stats: "必留", note: "召喚死靈經典神器。", tag: "keep" },
-            { category: "武器", name: "自殘之牙 (尖牙匕首 | 普通)", stats: "50% FCR / 必留", note: "拓荒極品，無形具交易價值。", tag: "keep" },
-            { category: "武器", name: "泰坦的復仇 (祭典標槍 | 卓越)", stats: "無形 / 180% ED+", note: "標馬標配，無形最貴。", tag: "keep" },
-            { category: "武器", name: "雷擊 (女傑標槍 | 精華)", stats: "+4 技能 / 190% ED", note: "純電傷標馬首選，必須 +4 技。", tag: "keep" },
-            { category: "武器", name: "霸圖克的歌喉爪 (大爪 | 卓越)", stats: "無形 / 200% ED", note: "刺客標配，無形高 ED 有價值。", tag: "special" },
-            { category: "武器", name: "風之力 (九頭蛇弓 | 精華)", stats: "8% 吸法 / 稀有度", note: "物理弓馬經典神弓。", tag: "high" },
-            { category: "武器", name: "暴雪砲弩 (重弩 | 卓越)", stats: "200% ED", note: "俗稱砲渣。高穿透力。", tag: "keep" },
-            { category: "武器", name: "惡魔機弩 (連發十字弩 | 卓越)", stats: "-", note: "強化法師畢業武器。", tag: "special" },
-            { category: "武器", name: "狂巫之弦 (長圍弓 | 卓越)", stats: "170% ED / 2 洞", note: "物理馬優質選。", tag: "keep" },
-            { category: "武器", name: "掠鴉之爪 (長弓 | 普通)", stats: "-", note: "內建爆炸箭，小號神兵。", tag: "special" },
-            { category: "武器", name: "社角久子 (短攻城弓 | 卓越)", stats: "180% ED", note: "內建穿透與爆炸箭。", tag: "special" },
-            { category: "武器", name: "血鴉之擊 (女傑之弓 | 精華)", stats: "+4 技 / 230% ED", note: "菁英級特定職業弓。", tag: "special" },
-            { category: "武器", name: "巫師之刺 (骸骨匕首 | 精華)", stats: "必留", note: "50% FCR / 75全抗。", tag: "keep" },
-            { category: "武器", name: "死神喪鐘 (銳利槍 | 精華)", stats: "無形 / 220% ED+", note: "觸發衰老，無形版天價。", tag: "high" },
-            { category: "武器", name: "盜墓者 (神秘之斧 | 精華)", stats: "3 洞 / 無形", note: "物理狂怒德神兵，無形 3 洞為天價。", tag: "high" },
-            { category: "武器", name: "水魔陷阱 (魔鬼之叉 | 卓越)", stats: "無形 / 75% 減速", note: "打王神物，建議保留無形版。", tag: "special" },
-            { category: "武器", name: "骨寸斷 (三叉長槍 | 普通)", stats: "無形 / 45% CB / 3 洞", note: "物理輸出極佳。", tag: "special" },
-            { category: "武器", name: "天堂之光 (強大的權杖 | 精華)", stats: "+3 技能 / 2 洞", note: "聖騎/盾丁優質選擇。", tag: "keep" },
-            { category: "武器", name: "艾斯特龍的鐵衛 (神使之杖 | 精華)", stats: "+4 技能 / 滿準", note: "極難掉落之神兵。", tag: "high" },
-            { category: "武器", name: "阿里巴巴彎刀 (圓月彎刀 | 普通)", stats: "無形 / 120% ED", note: "刷寶 (MF) 必備。", tag: "special" },
-            { category: "武器", name: "痛苦之鎚 (戰鎚 | 卓越)", stats: "必留", note: "破防副手神器。", tag: "special" }
+            // 武器 - 分門別類
+            { category: "法杖 / 法器", name: "眼球 (渦流水晶 | 卓越)", stats: "必留", note: "冰火法師初期神器。", tag: "keep" },
+            { category: "法杖 / 法器", name: "死亡深度 (次元碎片 | 精華)", stats: "冰傷 20%~30%", note: "冰法終極天價神兵。", tag: "high" },
+            { category: "法杖 / 法器", name: "死亡之網 (破隱法杖 | 精華)", stats: "+2 技 / -50% 毒抗", note: "毒死靈天價神兵。", tag: "high" },
+            { category: "法杖 / 法器", name: "里奧瑞克王的手骨 (古墓之杖 | 卓越)", stats: "必留", note: "召喚死靈經典神器。", tag: "keep" },
+            { category: "法杖 / 法器", name: "巫師之刺 (骸骨匕首 | 精華)", stats: "必留", note: "50% FCR / 75全抗。便宜好用。", tag: "keep" },
+
+            { category: "長柄 / 長矛", name: "死神喪鐘 (銳利槍 | 精華)", stats: "無形 / 220% ED+", note: "觸發衰老，無形版天價。", tag: "high" },
+            { category: "長柄 / 長矛", name: "盜墓者 (神秘之斧 | 精華)", stats: "3 洞 / 無形", note: "物理狂怒德神兵，無形 3 洞為天價。", tag: "high" },
+            { category: "長柄 / 長矛", name: "水魔陷阱 (魔鬼之叉 | 卓越)", stats: "無形 / 75% 減速", note: "打王神物，建議保留無形版升級給傭兵。", tag: "special" },
+
+            { category: "弓 / 弩", name: "風之力 (九頭蛇弓 | 精華)", stats: "8% 吸法", note: "物理弓馬經典神弓。", tag: "high" },
+            { category: "弓 / 弩", name: "暴雪砲弩 (重弩 | 卓越)", stats: "200% ED", note: "俗稱砲渣。高穿透力，早期神兵。", tag: "special" },
+            { category: "弓 / 弩", name: "惡魔機弩 (連發十字弩 | 卓越)", stats: "必留", note: "強化法師畢業專屬武器。", tag: "special" },
+            { category: "弓 / 弩", name: "狂巫之弦 (長圍弓 | 卓越)", stats: "170% ED / 2 洞", note: "內建致命打擊與抗性，可升級供過渡。", tag: "special" },
+
+            { category: "標槍 / 刺客爪", name: "泰坦的復仇 (祭典標槍 | 卓越)", stats: "無形 / 180% ED+", note: "標馬標配，無形最貴。", tag: "keep" },
+            { category: "標槍 / 刺客爪", name: "雷擊 (女傑標槍 | 精華)", stats: "+4 技能 / 190% ED", note: "純電傷標馬首選，必須 +4 技。", tag: "keep" },
+            { category: "標槍 / 刺客爪", name: "霸圖克的歌喉爪 (大爪 | 卓越)", stats: "無形 / 200% ED", note: "陷阱/武術刺標配，無形高 ED 有價值。", tag: "special" },
+
+            { category: "槌 / 劍 / 棍", name: "光之軍刀 (幻化之刃)", stats: "20% 攻速 / 忽視目標防禦", note: "攻速極快，拓荒好物。", tag: "special" },
+            { category: "槌 / 劍 / 棍", name: "天堂之光 (強大的權杖 | 精華)", stats: "+3 技能 / 2 洞", note: "聖騎/盾丁優質選擇。", tag: "keep" },
+            { category: "槌 / 劍 / 棍", name: "艾斯特龍的鐵衛 (神使之杖 | 精華)", stats: "+4 技能 / 滿準", note: "極難掉落之神兵。", tag: "high" },
+            { category: "槌 / 劍 / 棍", name: "阿里巴巴彎刀 (圓月彎刀 | 普通)", stats: "無形 / 120% ED", note: "刷寶 (MF) 必備切換副手。", tag: "special" },
+            { category: "槌 / 劍 / 棍", name: "肋骨粉碎者 (六尺棍 | 卓越)", stats: "無形 / 300% ED", note: "無形升級後為暴力狼德終極神兵。", tag: "high" }
         ]
     },
     bases: {
@@ -90,21 +96,23 @@ const D2R_DATA = {
         desc: "製作符文之語 (Runewords) 時最常用的有價底材。",
         items: [
             { category: "刺客爪", name: "巨鷹爪 / 符紋爪", stats: "0 或 3 洞 / +3 鳳凰攻擊", note: "馬賽克 (Mosaic) 神級底材。鳳凰 3 必備。", tag: "high" },
-            { category: "亞馬遜弓", name: "主母之弓", stats: "4 洞 / +3 技能 / 15% ED", note: "信心 (Faith) 頂級底材。", tag: "high" },
-            { category: "亞馬遜弓", name: "女傑之弓", stats: "4 洞 / +3 技能", note: "信心 (Faith) 底材。", tag: "keep" },
-            { category: "長柄武器", name: "巨型斬鐮", stats: "4 或 5 洞 / 無形", note: "無限、靈光。頂級無形底材。", tag: "high" },
-            { category: "長柄武器", name: "斬鐮", stats: "4 或 5 洞 / 無形", note: "無限、靈光。優質無形底材。", tag: "keep" },
-            { category: "單手劍", name: "幻化之刃", stats: "3, 4, 5 洞 / 15% ED", note: "悔恨、執法者、最後希望。", tag: "keep" },
-            { category: "單手斧", name: "狂戰斧", stats: "3, 4, 5 洞 / 無形 / 15% ED", note: "悔恨、死神、野獸。", tag: "keep" },
-            { category: "聖騎士盾", name: "神聖小盾 (ST)", stats: "0 或 4 洞 / 全抗 40~45", note: "精神 (Spirit) 畢業底材。", tag: "high" },
-            { category: "聖騎士盾", name: "漩渦盾", stats: "0 或 4 洞 / 全抗 40~45 / 無形", note: "精神、流亡 (Exile)。", tag: "high" },
-            { category: "精英鎧甲", name: "法師鎧甲", stats: "3 洞 / 15% ED", note: "謎團 (Enigma) 最熱門底材。", tag: "keep" },
-            { category: "精英鎧甲", name: "統御者鎧甲", stats: "3 或 4 洞 / 15% ED", note: "剛毅、謎團熱門選擇。", tag: "keep" },
-            { category: "精英鎧甲", name: "漆護 / 神聖戰甲", stats: "4 洞 / 無形", note: "剛毅用。基礎防禦 800-900+。", tag: "keep" },
-            { category: "法師法杖", name: "戰鬥 / 長者 / 統御者", stats: "4 洞 / +3 能量護盾 (ES)", note: "製作「記憶」撐 ES 用。", tag: "special" },
-            { category: "德魯伊", name: "皮帽系", stats: "3 洞 / +3 龍捲風", note: "搖曳火焰。+3 龍捲或火系技能。", tag: "keep" },
-            { category: "野蠻人", name: "頭盔系", stats: "3 洞 / +3 戰吼", note: "迪勒瑞姆或收藏。", tag: "special" },
-            { category: "死靈法師", name: "手杖系", stats: "0 或 2 洞 / +3 骨矛", note: "白色 (White) 底材。", tag: "keep" }
+            { category: "亞馬遜弓", name: "主母之弓", stats: "4 洞 / +3 弓系技能 / 15% ED", note: "信心 (Faith) 頂級底材。", tag: "high" },
+            { category: "亞馬遜弓", name: "女傑之弓", stats: "4 洞 / +3 弓系技能", note: "信心 (Faith) 底材。", tag: "keep" },
+            { category: "長柄武器", name: "無形銳利之斧 (Thresher)", stats: "0 洞、4 或 5 洞 / 無形", note: "傭兵無限、靈光「最熱門」頂級底材。", tag: "high" },
+            { category: "長柄武器", name: "無形巨型斬鐮 / 神秘之斧 / 巨長斧", stats: "0 洞、4 或 5 洞 / 無形", note: "無限、靈光的優質無形替換底材。", tag: "high" },
+            { category: "單手劍", name: "幻化之刃 (Phase Blade)", stats: "3, 4, 5 洞 / 15% ED", note: "悔恨 (5洞)、執法者 (3洞)、最後希望 (6洞)。", tag: "keep" },
+            { category: "單手劍", name: "水晶劍 / 闊劍", stats: "4 洞", note: "精神劍唯一的通用底材，法系必需品。", tag: "keep" },
+            { category: "單手斧", name: "狂戰斧", stats: "3, 4, 5 洞 / 無形 / 15% ED", note: "悔恨、死神、野獸。PK 玩家熱愛底材。", tag: "keep" },
+            { category: "單手盾", name: "君主盾 (Monarch)", stats: "0 或 4 洞 / 15% ED", note: "精神盾唯一的全民底材，非常熱銷。", tag: "keep" },
+            { category: "聖騎士盾", name: "神聖小盾 (ST) / 神聖輕圓盾", stats: "0 或 4 洞 / 全抗 40~45", note: "精神 (Spirit) 畢業底材，需極高全抗。", tag: "high" },
+            { category: "聖騎士盾", name: "漩渦盾 / 薩卡蘭姆盾", stats: "0 或 4 洞 / 全抗 40~45 / 無形", note: "流亡 (Exile) 的無形畢業底材。", tag: "high" },
+            { category: "輕型鎧甲", name: "法師鎧甲 (Mage Plate)", stats: "3 洞 / 15% ED (261 防)", note: "謎團 (Enigma) 熱門底材，無力量需求。", tag: "keep" },
+            { category: "輕型鎧甲", name: "灰暮壽衣 / 聖甲蟲殼 / 古龍皮", stats: "3, 4 洞 / 15% ED / 無形", note: "輕甲。剛毅、謎團熱門選擇。", tag: "keep" },
+            { category: "重型鎧甲", name: "統御者鎧甲 / 漆護 / 神聖戰甲", stats: "4 洞 / 無形 / 破千防", note: "傭兵剛毅用無形底材，防禦越高越好。", tag: "keep" },
+            { category: "法師法杖", name: "戰鬥 / 長者 / 統御者法杖", stats: "4 洞 / +3 能量護盾 (ES)", note: "製作「記憶」撐 ES (頂蛋) 用。", tag: "special" },
+            { category: "德魯伊", name: "皮帽系", stats: "3 洞 / +3 龍捲風 或 召喚灰熊", note: "搖曳火焰、迪勒瑞姆底材。", tag: "keep" },
+            { category: "野蠻人", name: "頭盔系", stats: "3 洞 / +3 戰鬥體制 (BO)", note: "迪勒瑞姆 (撐 BO) 底材。", tag: "special" },
+            { category: "死靈法師", name: "手杖系 (Wands)", stats: "0 或 2 洞 / +3 骨矛", note: "白色 (White) 符文組底材。", tag: "keep" }
         ]
     },
     sets: {
@@ -187,8 +195,9 @@ const D2R_DATA = {
             { category: "珠寶", name: "15/40 珠寶", stats: "15% 攻速 / 40% ED", note: "物理職業終極珠寶，天價。", tag: "high" },
             { category: "珠寶", name: "減需抗性珠寶", stats: "-15% 需求 / 15 全抗", note: "常用於統盾。", tag: "keep" },
             { category: "藍黃極品", name: "施法者項鍊 (手工)", stats: "+2 技能 / 15-20% FCR", note: "法系終極項鍊。", tag: "high" },
+            { category: "藍黃極品", name: "神級頭飾 (黃/藍頭環 | Diadems)", stats: "+2 職業 / 20% FCR / 2 洞", note: "法系終極追求，附加高力敏抗為天價。藍頭可洗出 +3 單系/20FCR。", tag: "high" },
             { category: "藍黃極品", name: "三抗鞋 (黃)", stats: "30% 跑速 / 10% FHR / 三抗 100%+", note: "極昂貴。找電/火抗。", tag: "high" },
-            { category: "藍黃極品", name: "偏向盾 (JMoD)", stats: "4 洞 / 30% FBR / 20% 格擋率", note: "君主盾底材。極昂貴藍裝。", tag: "high" }
+            { category: "藍黃極品", name: "偏向盾 (JMoD | 統盾)", stats: "4 洞 / 30% FBR / 20% 格擋率", note: "君主盾底材。電法/亞馬天價盾。", tag: "high" }
         ]
     }
 };
