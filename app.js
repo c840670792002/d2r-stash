@@ -112,14 +112,24 @@ document.addEventListener('DOMContentLoaded', () => {
         let bestMatch = null;
         let maxScore = 0;
 
-        // Iterate through all categories in D2R_DATA
+        // Fuzzy match: Score based on how many characters of item name appear in OCR text
         for (let section in D2R_DATA) {
             D2R_DATA[section].items.forEach(item => {
-                // Find pure name (strip rarity/base from parentheses)
-                const pureName = item.name.split(' (')[0];
-                if (normalizedText.includes(pureName)) {
+                const pureName = item.name.split(' (')[0].replace(/\s+/g, '');
+                let matchCount = 0;
+
+                // Count how many unique characters of the item name exist in the found text
+                const uniqueChars = [...new Set(pureName.split(''))];
+                uniqueChars.forEach(char => {
+                    if (normalizedText.includes(char)) matchCount++;
+                });
+
+                const score = (matchCount / uniqueChars.length) * 100;
+
+                // We need a threshold (e.g., 70% match and at least 3 chars)
+                if (score > maxScore && score > 70 && pureName.length >= 2) {
+                    maxScore = score;
                     bestMatch = item;
-                    maxScore = 100; // Perfect name match
                 }
             });
         }

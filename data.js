@@ -116,7 +116,7 @@ const D2R_DATA = {
             { category: "高價值單件", name: "塔格奧之束縛", stats: "無法冰凍", note: "死靈法師撐抗必備。", tag: "special" },
             { category: "高價值單件", name: "解迷杖 (納吉)", stats: "傳送聚氣 69 次", note: "副手必備，拓荒神器。", tag: "keep" },
             { category: "高價值單件", name: "天使之翼 (項鍊+戒指)", stats: "兩件套組", note: "提供海量準確率 (AR)。", tag: "keep" },
-            { category: "實用全套", name: "塔拉夏的法衣", stats: "漆甲 / 項鍊 是重點", note: "MF 刷寶標配，法師穩定選擇。", tag: "high" },
+            { category: "實用全套", name: "塔拉夏的法衣 (塔拉夏的守護/判決)", stats: "漆甲 / 項鍊 是重點", note: "MF 刷寶標配，法師穩定選擇。", tag: "high" },
             { category: "實用全套", name: "不朽之王 (IK)", stats: "胸甲最難掉", note: "野蠻人穩定的通關選擇。", tag: "special" },
             { category: "實用全套", name: "娜塔亞地圖騰", stats: "武器最稀有", note: "全套高物理減傷，自用強悍。", tag: "special" },
             { category: "實用全套", name: "牛王之皮", stats: "全套", note: "具備趣味性，適合特殊玩法。", tag: "收藏" }
