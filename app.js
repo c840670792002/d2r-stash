@@ -4,7 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Check for initApp already defined (or directly run logic)
+    // Check for initApp already defined
 });
 
 function initApp() {
@@ -136,9 +136,9 @@ function initApp() {
 
     function processRecognitionResult(rawText, lines = []) {
         const normalizedText = rawText.replace(/\s+/g, '');
-        const cleanOCRText = normalizedText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+        const cleanFullText = normalizedText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
 
-        // Convert lines to a structured object with priority
+        // Structure lines with basic cleanup
         const structuredLines = lines.map((l, index) => {
             const clean = l.text.replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
             return { clean, original: l.text.trim(), index };
@@ -149,62 +149,73 @@ function initApp() {
         let matchIsGlobal = false;
 
         function calculateScore(itemEntry, isGlobal = false) {
-            // Support both object entries (data.js) and string entries (unique_names.js)
             const itemName = typeof itemEntry === 'string' ? itemEntry : itemEntry.name;
-            const names = itemName.replace(/[()]/g, '/').split('/').map(n => n.trim().replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '')).filter(n => n.length >= 2);
+            // Split by aliases but also keep the whole thing for comprehensive check
+            const aliasParts = itemName.replace(/[()]/g, '/').split('/').map(n => n.trim().replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '')).filter(n => n.length >= 2);
 
-            let itemMaxScore = 0;
+            let itemEntryMaxScore = 0;
 
-            names.forEach(name => {
+            aliasParts.forEach(name => {
                 let currentMatchScore = 0;
 
-                // Priority 1: Exact Full-Line Match (VERY HIGH)
-                // If a line in the OCR exactly matches the item name, it's almost certainly it.
-                const lineMatch = structuredLines.find(l => l.clean === name);
-                if (lineMatch) {
-                    // Give priority to lines appearing earlier (like the first line)
-                    currentMatchScore += 10000 + (1000 / (lineMatch.index + 1)) + (name.length * 100);
+                // 1. Line-based Matching (Highest Priority)
+                // We check if the name is CONTAINED in a line, or if the line is CONTAINED in the name.
+                // This handles OCR adding extra noise at the start/end of a line.
+                structuredLines.slice(0, 5).forEach(line => {
+                    if (line.clean === name) {
+                        currentMatchScore = Math.max(currentMatchScore, 20000 + (1000 / (line.index + 1)) + (name.length * 100));
+                    } else if (line.clean.includes(name) || name.includes(line.clean)) {
+                        // Calculate overlap percentage
+                        const shorter = Math.min(name.length, line.clean.length);
+                        const longer = Math.max(name.length, line.clean.length);
+                        const overlapRatio = shorter / longer;
+
+                        if (overlapRatio >= 0.7) {
+                            currentMatchScore = Math.max(currentMatchScore, 10000 * overlapRatio + (500 / (line.index + 1)));
+                        }
+                    }
+                });
+
+                // 2. Full Text Substring (Secondary)
+                if (currentMatchScore < 5000 && cleanFullText.includes(name)) {
+                    currentMatchScore = Math.max(currentMatchScore, 5000 + (name.length * 20));
                 }
 
-                // Priority 2: Substring Match of a Line
-                // Check if any single line *contains* the name (less weight than full line)
-                const partialLineMatch = structuredLines.find(l => l.clean.includes(name));
-                if (partialLineMatch) {
-                    currentMatchScore += 5000 + (name.length * 50);
-                }
-
-                // Priority 3: Global Substring (Fallback)
-                if (!currentMatchScore && cleanOCRText.includes(name)) {
-                    currentMatchScore += 1000 + (name.length * 10);
-                }
-
-                // Fuzzy Fallback (least reliable)
-                if (!currentMatchScore) {
+                // 3. Fuzzy Logic (Char overlap)
+                if (currentMatchScore < 1000) {
                     const textChars = name.replace(/[0-9]/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
                     if (textChars.length >= 3) {
                         let matchCount = 0;
                         const uniqueChars = [...new Set(textChars.split(''))];
                         uniqueChars.forEach(char => {
-                            if (cleanOCRText.includes(char)) matchCount++;
+                            if (cleanFullText.includes(char)) matchCount++;
                         });
-                        if (matchCount / uniqueChars.length >= 0.8) {
-                            currentMatchScore += (matchCount * 40);
+                        const ratio = matchCount / uniqueChars.length;
+                        if (ratio >= 0.8) {
+                            currentMatchScore = Math.max(currentMatchScore, 2000 * ratio + (matchCount * 10));
                         }
                     }
                 }
 
-                if (currentMatchScore > itemMaxScore) itemMaxScore = currentMatchScore;
+                if (currentMatchScore > itemEntryMaxScore) itemEntryMaxScore = currentMatchScore;
             });
 
-            // Specific Penalties to fix user-reported errors:
-            // 1. If matching "bases" category, and the match is only a partial word in a line (like '戰鬥' in '戰鬥腰帶'), slash the score.
-            if (itemEntry.category === "法師法杖" && names.some(n => n === "戰鬥")) {
-                const hasBattleBelt = structuredLines.some(l => l.clean.includes("戰鬥腰帶"));
-                if (hasBattleBelt) itemMaxScore -= 8000;
+            // --- CRITICAL FIX: Numeric Filtering ---
+            // If the item name is mostly numbers (like "3/20/20") but it's not found in the TOP line
+            // and the top lines clearly contain some Chinese text, then penalize the numeric match heavily.
+            const isNumeric = (typeof itemEntry === 'object' && itemEntry.category === "小型咒符 (SC)") || itemName.match(/[0-9]/);
+            if (isNumeric) {
+                const topTextHasHinese = structuredLines.slice(0, 2).some(l => l.clean.match(/[\u4e00-\u9fa5]/));
+                const nameHasChinese = itemName.match(/[\u4e00-\u9fa5]/);
+
+                // If the OCR top line is Chinese but we are matching a numeric-heavy item entry, penalize.
+                if (topTextHasHinese && !nameHasChinese) {
+                    itemEntryMaxScore -= 15000;
+                }
             }
 
-            if (isGlobal) itemMaxScore *= 0.9;
-            return itemMaxScore;
+            if (isGlobal) itemEntryMaxScore *= 0.85;
+            return itemEntryMaxScore;
         }
 
         // Pass 1: Guide
@@ -253,7 +264,7 @@ function initApp() {
             resultBody.innerHTML = `
                 <div class="analysis-item">
                     <p>🔍 <span class="analysis-label">未匹配到特定裝備</span></p>
-                    <p>未能清晰辨識。提示：請確保截圖包含完整的黃色/暗金品名（通常在最上方）。</p>
+                    <p>未能清晰辨識。請確保截圖清晰且包含完整的品名。 (MaxScore: ${Math.round(maxScore)})</p>
                 </div>
             `;
         }
@@ -318,7 +329,6 @@ function initApp() {
     updateVisibility();
 }
 
-// Immediate execution if DOM is ready, otherwise wait
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp);
 } else {
