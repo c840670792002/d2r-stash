@@ -6,6 +6,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const sectionTitle = document.getElementById('section-title');
     const sectionDesc = document.getElementById('section-desc');
 
+    // Navigation Elements
+    const diagnosisSection = document.getElementById('diagnosis-section');
+    const contentHeader = document.querySelector('.content-header');
+    const dropZone = document.getElementById('drop-zone');
+    const previewImg = document.getElementById('preview-img');
+    const diagnosisResult = document.getElementById('diagnosis-result');
+    const resultBody = document.getElementById('result-body');
+    const mainView = document.getElementById('main-view');
+
     function renderItems(filter = '') {
         const data = D2R_DATA[currentSection];
         if (!data) return;
@@ -20,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
             item.stats.toLowerCase().includes(filter.toLowerCase())
         );
 
-        // Grouping logic
         const groups = {};
         filteredItems.forEach(item => {
             if (!groups[item.category]) groups[item.category] = [];
@@ -28,13 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         Object.keys(groups).forEach(category => {
-            // Add category header
             const header = document.createElement('div');
             header.className = 'category-group-header';
             header.innerHTML = `<h3>${category}</h3>`;
             cardGrid.appendChild(header);
 
-            // Add items under this category
             groups[category].forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'item-card';
@@ -53,16 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Navigation Elements
-    const diagnosisSection = document.getElementById('diagnosis-section');
-    const contentHeader = document.querySelector('.content-header');
-    const dropZone = document.getElementById('drop-zone');
-    const previewImg = document.getElementById('preview-img');
-    const diagnosisResult = document.getElementById('diagnosis-result');
-    const resultBody = document.getElementById('result-body');
-    const mainView = document.getElementById('main-view');
-
-    // Visibility Logic
     function updateVisibility() {
         if (!diagnosisSection || !contentHeader || !mainView) return;
 
@@ -78,69 +74,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Initial render
-    updateVisibility();
-
     // Navigation Logic
-    link.addEventListener('click', () => {
-        navLinks.forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
-        currentSection = link.getAttribute('data-section');
-        searchInput.value = '';
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            currentSection = link.getAttribute('data-section');
+            searchInput.value = '';
+            updateVisibility();
+        });
+    });
 
-        // Toggle Visibility
-        if (currentSection === 'diagnosis') {
-            diagnosisSection.classList.remove('hidden');
-            contentHeader.classList.add('hidden');
-            mainView.classList.add('hidden');
-        } else {
-            diagnosisSection.classList.add('hidden');
-            contentHeader.classList.remove('hidden');
-            mainView.classList.remove('hidden');
-            renderItems();
+    // --- Smart Diagnosis Logic ---
+    window.addEventListener('paste', (e) => {
+        if (currentSection !== 'diagnosis') return;
+
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        let foundImage = false;
+
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                foundImage = true;
+                const blob = items[i].getAsFile();
+                const reader = new FileReader();
+
+                resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在讀取截圖數據...</p></div>';
+                diagnosisResult.classList.remove('hidden');
+
+                reader.onload = (event) => {
+                    previewImg.src = event.target.result;
+                    previewImg.classList.remove('hidden');
+                    document.querySelector('.drop-zone-content').classList.add('hidden');
+                    startAnalysis();
+                };
+                reader.onerror = () => {
+                    resultBody.innerHTML = '<div class="analysis-item"><p>❌ 讀取圖片失敗，請再試一次。</p></div>';
+                };
+                reader.readAsDataURL(blob);
+            }
         }
     });
-});
 
-// --- Smart Diagnosis Logic ---
-window.addEventListener('paste', (e) => {
-    if (currentSection !== 'diagnosis') return;
-
-    console.log('Paste event detected');
-    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-    let foundImage = false;
-
-    for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') !== -1) {
-            foundImage = true;
-            const blob = items[i].getAsFile();
-            const reader = new FileReader();
-
-            // Show immediate feedback
-            resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在讀取截圖數據...</p></div>';
-            diagnosisResult.classList.remove('hidden');
-
-            reader.onload = (event) => {
-                previewImg.src = event.target.result;
-                previewImg.classList.remove('hidden');
-                document.querySelector('.drop-zone-content').classList.add('hidden');
-                startAnalysis();
-            };
-            reader.onerror = () => {
-                resultBody.innerHTML = '<div class="analysis-item"><p>❌ 讀取圖片失敗，請再試一次。</p></div>';
-            };
-            reader.readAsDataURL(blob);
-        }
-    }
-
-    if (!foundImage) {
-        console.log('No image found in clipboard');
-    }
-});
-
-function startAnalysis() {
-    diagnosisResult.classList.remove('hidden');
-    resultBody.innerHTML = `
+    function startAnalysis() {
+        diagnosisResult.classList.remove('hidden');
+        resultBody.innerHTML = `
             <div class="analysis-item">
                 <p>📸 <span class="analysis-label">截圖已接收</span></p>
                 <p>由於網頁端權限限制，請將此截圖同步發送給 <strong>Antigravity (AI 助理)</strong>。</p>
@@ -154,10 +131,13 @@ function startAnalysis() {
                 <p style="margin-top: 1rem; color: var(--gold-bright);">請直接在對話框中貼上截圖，我會立刻為你分析！</p>
             </div>
         `;
-}
+    }
 
-// Search Logic
-searchInput.addEventListener('input', (e) => {
-    renderItems(e.target.value);
-});
+    // Search Logic
+    searchInput.addEventListener('input', (e) => {
+        renderItems(e.target.value);
+    });
+
+    // Initial render
+    updateVisibility();
 });
