@@ -4,7 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Check for initApp already defined
+    // initApp is now called based on document ready state or onload
 });
 
 function initApp() {
@@ -135,120 +135,18 @@ function initApp() {
     }
 
     function processRecognitionResult(rawText, lines = []) {
-        const normalizedText = rawText.replace(/\s+/g, '');
-        const cleanFullText = normalizedText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
-
-        // Structure lines with basic cleanup
-        const structuredLines = lines.map((l, index) => {
-            const clean = l.text.replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
-            return { clean, original: l.text.trim(), index };
-        }).filter(l => l.clean.length >= 2);
-
-        let bestMatch = null;
-        let maxScore = 0;
-        let matchIsGlobal = false;
-
-        function calculateScore(itemEntry, isGlobal = false) {
-            const itemName = typeof itemEntry === 'string' ? itemEntry : itemEntry.name;
-            // Split by aliases but also keep the whole thing for comprehensive check
-            const aliasParts = itemName.replace(/[()]/g, '/').split('/').map(n => n.trim().replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '')).filter(n => n.length >= 2);
-
-            let itemEntryMaxScore = 0;
-
-            aliasParts.forEach(name => {
-                let currentMatchScore = 0;
-
-                // 1. Line-based Matching (Highest Priority)
-                // We check if the name is CONTAINED in a line, or if the line is CONTAINED in the name.
-                // This handles OCR adding extra noise at the start/end of a line.
-                structuredLines.slice(0, 5).forEach(line => {
-                    if (line.clean === name) {
-                        currentMatchScore = Math.max(currentMatchScore, 20000 + (1000 / (line.index + 1)) + (name.length * 100));
-                    } else if (line.clean.includes(name) || name.includes(line.clean)) {
-                        // Calculate overlap percentage
-                        const shorter = Math.min(name.length, line.clean.length);
-                        const longer = Math.max(name.length, line.clean.length);
-                        const overlapRatio = shorter / longer;
-
-                        if (overlapRatio >= 0.7) {
-                            currentMatchScore = Math.max(currentMatchScore, 10000 * overlapRatio + (500 / (line.index + 1)));
-                        }
-                    }
-                });
-
-                // 2. Full Text Substring (Secondary)
-                if (currentMatchScore < 5000 && cleanFullText.includes(name)) {
-                    currentMatchScore = Math.max(currentMatchScore, 5000 + (name.length * 20));
-                }
-
-                // 3. Fuzzy Logic (Char overlap)
-                if (currentMatchScore < 1000) {
-                    const textChars = name.replace(/[0-9]/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
-                    if (textChars.length >= 3) {
-                        let matchCount = 0;
-                        const uniqueChars = [...new Set(textChars.split(''))];
-                        uniqueChars.forEach(char => {
-                            if (cleanFullText.includes(char)) matchCount++;
-                        });
-                        const ratio = matchCount / uniqueChars.length;
-                        if (ratio >= 0.8) {
-                            currentMatchScore = Math.max(currentMatchScore, 2000 * ratio + (matchCount * 10));
-                        }
-                    }
-                }
-
-                if (currentMatchScore > itemEntryMaxScore) itemEntryMaxScore = currentMatchScore;
-            });
-
-            // --- CRITICAL FIX: Numeric Filtering ---
-            // If the item name is mostly numbers (like "3/20/20") but it's not found in the TOP line
-            // and the top lines clearly contain some Chinese text, then penalize the numeric match heavily.
-            const isNumeric = (typeof itemEntry === 'object' && itemEntry.category === "小型咒符 (SC)") || itemName.match(/[0-9]/);
-            if (isNumeric) {
-                const topTextHasHinese = structuredLines.slice(0, 2).some(l => l.clean.match(/[\u4e00-\u9fa5]/));
-                const nameHasChinese = itemName.match(/[\u4e00-\u9fa5]/);
-
-                // If the OCR top line is Chinese but we are matching a numeric-heavy item entry, penalize.
-                if (topTextHasHinese && !nameHasChinese) {
-                    itemEntryMaxScore -= 15000;
-                }
-            }
-
-            if (isGlobal) itemEntryMaxScore *= 0.85;
-            return itemEntryMaxScore;
+        if (typeof D2R_MATCHER === 'undefined') {
+            resultBody.innerHTML = '<div class="analysis-item"><p>❌ 辨識核心載入失敗，請重新整理頁面。</p></div>';
+            return;
         }
 
-        // Pass 1: Guide
-        for (let section in D2R_DATA) {
-            D2R_DATA[section].items.forEach(item => {
-                const score = calculateScore(item, false);
-                if (score > maxScore && score > 0) {
-                    maxScore = score;
-                    bestMatch = item;
-                    matchIsGlobal = false;
-                }
-            });
-        }
+        const result = D2R_MATCHER.match(rawText, lines);
 
-        // Pass 2: Global
-        if (typeof D2R_ALL_UNIQUES !== 'undefined') {
-            D2R_ALL_UNIQUES.forEach(name => {
-                const score = calculateScore(name, true);
-                if (score > maxScore && score > 0) {
-                    maxScore = score;
-                    bestMatch = {
-                        name: name,
-                        tag: 'none',
-                        stats: '這是一件獨特 (暗金) 裝備，但「保留指南」中未列出具體數值基準。',
-                        note: '這通常代表該裝備屬於過渡性質，或市場價值較低。建議自用或販售給 NPC。'
-                    };
-                    matchIsGlobal = true;
-                }
-            });
-        }
-
-        if (bestMatch) {
+        if (result) {
+            const bestMatch = result.item;
+            const matchIsGlobal = result.isGlobal;
             const isGuideItem = !matchIsGlobal;
+
             resultBody.innerHTML = `
                 <div class="analysis-item">
                     <p><span class="analysis-label">識別結果：</span><span class="${isGuideItem ? 'status-keep' : ''}">${bestMatch.name.split(' (')[0]}</span></p>
@@ -264,7 +162,7 @@ function initApp() {
             resultBody.innerHTML = `
                 <div class="analysis-item">
                     <p>🔍 <span class="analysis-label">未匹配到特定裝備</span></p>
-                    <p>未能清晰辨識。請確保截圖清晰且包含完整的品名。 (MaxScore: ${Math.round(maxScore)})</p>
+                    <p>未能清晰辨識。請確保截圖清晰且包含完整的品名。</p>
                 </div>
             `;
         }

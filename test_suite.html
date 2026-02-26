@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>D2R Matcher Test Suite</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #1a1a1a;
+            color: #eee;
+            padding: 20px;
+        }
+
+        .test-case {
+            background: #2a2a2a;
+            border-left: 5px solid #555;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .test-case.pass {
+            border-left-color: #4caf50;
+        }
+
+        .test-case.fail {
+            border-left-color: #f44336;
+        }
+
+        .status {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .pass .status {
+            color: #4caf50;
+        }
+
+        .fail .status {
+            color: #f44336;
+        }
+
+        pre {
+            background: #000;
+            padding: 10px;
+            overflow: auto;
+            font-size: 12px;
+        }
+
+        h1 {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>D2R Matcher Regression Tests</h1>
+    <div id="summary"></div>
+    <div id="results"></div>
+
+    <script src="data.js"></script>
+    <script src="unique_names.js"></script>
+    <script src="matcher.js"></script>
+    <script>
+        const testCases = [
+            {
+                name: "盜賊皇冠 (Thief's Crown)",
+                text: "盜賊皇冠\n莊嚴王冠 | 進階\n防禦：307",
+                expected: "盜賊皇冠",
+                lines: [{ text: "盜賊皇冠" }, { text: "莊嚴王冠 | 進階" }]
+            },
+            {
+                name: "黃金裹腰 (Goldwrap)",
+                text: "黃金裹腰\n戰鬥腰帶 | 進階\n防禦：80",
+                expected: "黃金裹腰",
+                lines: [{ text: "黃金裹腰" }, { text: "戰鬥腰帶 | 進階" }]
+            },
+            {
+                name: "地獄闊步 (Infernostride)",
+                text: "地獄闊步\n魔皮靴 | 卓越\n+30% 跑速",
+                expected: "地獄闊步",
+                lines: [{ text: "地獄闊步" }, { text: "魔皮靴 | 卓越" }]
+            },
+            {
+                name: "按手禮 (Laying of Hands)",
+                text: "按手禮\n荊棘手套 | 精英\n攻速 +20%",
+                expected: "按手禮",
+                lines: [{ text: "按手禮" }, { text: "荊棘手套 | 精英" }]
+            },
+            {
+                name: "3/20/20 (False Positive Check)",
+                text: "地獄闊步\n魔皮靴 | 卓越\n+30% 跑速\n附加 12-33 傷害",
+                expected: "地獄闊步",
+                lines: [{ text: "地獄闊步" }]
+            },
+            {
+                name: "吉永之臉",
+                text: "吉永之臉\n翼盔 | 進階",
+                expected: "吉永之臉",
+                lines: [{ text: "吉永之臉" }]
+            }
+        ];
+
+        let passed = 0;
+        const resultsDiv = document.getElementById('results');
+
+        testCases.forEach(tc => {
+            const result = D2R_MATCHER.match(tc.text, tc.lines);
+            const actualName = result ? result.item.name.split(' (')[0] : "None";
+            const isPass = actualName.includes(tc.expected);
+
+            if (isPass) passed++;
+
+            const div = document.createElement('div');
+            div.className = `test-case ${isPass ? 'pass' : 'fail'}`;
+            div.innerHTML = `
+                <div class="status">${isPass ? 'PASS' : 'FAIL'}: ${tc.name}</div>
+                <div>Expected: <b>${tc.expected}</b></div>
+                <div>Actual: <b>${actualName}</b> (Score: ${result ? Math.round(result.score) : 0})</div>
+                <details>
+                    <summary>OCR Source</summary>
+                    <pre>${tc.text}</pre>
+                </details>
+            `;
+            resultsDiv.appendChild(div);
+        });
+
+        document.getElementById('summary').innerHTML = `<h2>Result: ${passed} / ${testCases.length} Passed</h2>`;
+    </script>
+</body>
+
+</html>
