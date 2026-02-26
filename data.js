@@ -28,14 +28,14 @@ const D2R_DATA = {
             // 頭盔
             { category: "頭盔", name: "吸血鬼目光 (死神面具 | 卓越)", stats: "減傷 15% / 雙吸", note: "傭兵或物理職業頂級減傷選。", tag: "keep" },
             { category: "頭盔", name: "諧角之冠 (軍帽 | 精華)", stats: "防禦 141 (滿值)", note: "俗稱軍帽。後期刷寶標配。", tag: "keep" },
-            { category: "頭盔", name: "安達利爾的面貌 (惡魔頭蓋骨面具 | 精華)", stats: "無形 / 10%吸血 / 30力", note: "俗稱安頭。傭兵終極神裝。", tag: "high" },
-            { category: "頭盔", name: "盜賊皇冠 (盜賊黃冠 | 莊嚴王冠 | 卓越)", stats: "12% 吸血 / 100% 打錢", note: "打錢野蠻人與傭兵優質選。", tag: "keep" },
-            { category: "武器", name: "光之軍刀 (幻化之刃 | 精英)", stats: "20% 攻速 / 忽視目標防禦", note: "攻速極快，拓荒好物。", tag: "keep" },
-            { category: "頭盔", name: "格里風之眼 (權冠 | 精華)", stats: "-20%電抗 / +15%電傷", note: "電系終極頭盔，極品天價。", tag: "high" },
-            { category: "頭盔", name: "亞瑞特的面容 (殺手防護面具 | 卓越)", stats: "180%+ ED / 6%吸血", note: "俗稱飛機頭。無形版身價極高。", tag: "keep" },
-            { category: "頭盔", name: "奇拉的守護 (三重冠 | 精華)", stats: "抗性 65 以上", note: "無法冰凍，打火炬或給傭兵。", tag: "special" },
-
-            // 盔甲
+            { category: "頭盔", name: "安達利爾的面貌 (惡魔頭蓋骨面具)", stats: "無形 / 10%吸血 / 30力", note: "俗稱安頭。傭兵終極神裝。", tag: "high" },
+            { category: "頭盔", name: "盜賊皇冠 (盜賊黃冠 | 莊嚴王冠)", stats: "12% 吸血 / 100% 打錢", note: "打錢野蠻人與傭兵優質選。", tag: "keep" },
+            { category: "武器", name: "光之軍刀 (幻化之刃)", stats: "20% 攻速 / 忽視目標防禦", note: "攻速極快，拓荒好物。", tag: "keep" },
+            { category: "戒指", name: "矮人之星 (40生命 / 15%吸火)", stats: "40生命 / 15%吸火 / 100%EG", note: "打錢/吸火神器。", tag: "keep" },
+            { category: "頭盔", name: "格里風之眼 (權冠)", stats: "-20%電抗 / +15%電傷", note: "電系終極頭盔，極品天價。", tag: "high" },
+            { category: "頭盔", name: "亞瑞特的面容 (殺手防護面具)", stats: "180%+ ED / 6%吸血", note: "俗稱飛機頭。無形版身價極高。", tag: "keep" },
+            { category: "頭盔", name: "奇拉的守護 (三重冠)", stats: "抗性 65 以上", note: "無法冰凍，打火炬或給傭兵。", tag: "special" },
+            { category: "頭盔", name: "夜翼面紗 (巨角頭盔)", stats: "必留", note: "冰系極品頭盔，頂 15% 冰傷最貴。", tag: "keep" },
             { category: "盔甲", name: "海蛇皮甲 (蛇皮綢緞甲 | 卓越)", stats: "全抗 35 / 魔法減傷 13", note: "法系畢業級，35抗滿值最優。", tag: "keep" },
             { category: "盔甲", name: "都瑞爾的殼 (護胸甲 | 卓越)", stats: "無形 (Eth)", note: "無法冰凍，無形版為傭兵神裝。", tag: "keep" },
             { category: "盔甲", name: "謝夫特斯得 (網眼甲 | 卓越)", stats: "無形 / 220% ED", note: "30% 減傷，無形高防版天價。", tag: "high" },

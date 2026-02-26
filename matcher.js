@@ -24,10 +24,16 @@ const D2R_MATCHER = {
         let matchIsGlobal = false;
         let matchDetails = [];
 
+        const BLACKLIST_WORDS = ["精英", "卓越", "普通", "項鍊", "戒指", "手套", "鞋子", "護甲", "盔甲", "盾牌", "腰帶", "飾品", "武器", "防具", "套裝", "暗金", "獨特", "精華", "拓荒", "建議", "保留", "有價", "基礎", "等級", "需要", "力量", "敏捷", "技能", "生命"];
+
         const calculateScore = (itemEntry, isGlobal = false) => {
             const itemName = typeof itemEntry === 'string' ? itemEntry : itemEntry.name;
             const cleanItemName = itemName.replace(/[()|]/g, '/');
-            const aliasParts = cleanItemName.split('/').map(n => n.trim().replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '')).filter(n => n.length >= 2);
+            const aliasParts = cleanItemName.split('/')
+                .map(n => n.trim().replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''))
+                .filter(n => n.length >= 2 && !BLACKLIST_WORDS.includes(n));
+
+            if (aliasParts.length === 0) return { score: 0, alias: "" };
 
             let itemEntryMaxScore = 0;
             let bestAlias = "";
@@ -98,7 +104,7 @@ const D2R_MATCHER = {
                 D2R_DATA[section].items.forEach(item => {
                     const res = calculateScore(item, false);
                     addCandidate(item, res, false);
-                    if (res.score > maxScore) {
+                    if (bestMatch === null || res.score > maxScore) {
                         maxScore = res.score;
                         bestMatch = item;
                         matchIsGlobal = false;
@@ -112,12 +118,12 @@ const D2R_MATCHER = {
             D2R_ALL_UNIQUES.forEach(name => {
                 const res = calculateScore(name, true);
                 addCandidate(name, res, true);
-                if (res.score > maxScore) {
+                if (bestMatch === null || res.score > maxScore) {
                     maxScore = res.score;
                     bestMatch = {
                         name: name,
                         tag: 'none',
-                        stats: '這是一件獨特 (暗金) 裝備，但「保留指南」中未列出具體數值基準。',
+                        stats: '這是一件獨特 (暗金) 裝備，但「保留指南」中未列出具體數值備註。',
                         note: '這通常表示該裝備雖具獨特性，但在中後期刷寶中價值較低，或屬於拓荒性質裝備。'
                     };
                     matchIsGlobal = true;
