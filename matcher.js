@@ -26,6 +26,31 @@ const D2R_MATCHER = {
 
         const BLACKLIST_WORDS = ["精英", "卓越", "普通", "項鍊", "戒指", "手套", "鞋子", "護甲", "盔甲", "盾牌", "腰帶", "飾品", "武器", "防具", "套裝", "暗金", "獨特", "精華", "拓荒", "建議", "保留", "有價", "基礎", "等級", "需要", "力量", "敏捷", "技能", "生命"];
 
+        const levenshteinDistance = (s1, s2) => {
+            if (s1.length === 0) return s2.length;
+            if (s2.length === 0) return s1.length;
+            const matrix = [];
+            for (let i = 0; i <= s1.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= s2.length; j++) matrix[0][j] = j;
+            for (let i = 1; i <= s1.length; i++) {
+                for (let j = 1; j <= s2.length; j++) {
+                    const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j - 1] + cost
+                    );
+                }
+            }
+            return matrix[s1.length][s2.length];
+        };
+
+        const getSimilarity = (s1, s2) => {
+            const maxLen = Math.max(s1.length, s2.length);
+            if (maxLen === 0) return 1.0;
+            return 1.0 - levenshteinDistance(s1, s2) / maxLen;
+        };
+
         const calculateScore = (itemEntry, isGlobal = false) => {
             const itemName = typeof itemEntry === 'string' ? itemEntry : itemEntry.name;
             const cleanItemName = itemName.replace(/[()|]/g, '/');
@@ -37,27 +62,43 @@ const D2R_MATCHER = {
 
             let itemEntryMaxScore = 0;
             let bestAlias = "";
+            let bestMatchLineIndex = -1;
 
             aliasParts.forEach(alias => {
                 let currentAliasScore = 0;
+                let matchedLineIdx = -1;
 
-                // 1. Line-based Matching (Aggressive First-Line Priority)
+                // 1. Line-based Matching (Fuzzy + Sliding Window)
                 structuredLines.slice(0, 8).forEach(line => {
                     const lineText = line.clean;
                     const isFirstLine = line.index === 0;
 
-                    if (lineText === alias) {
-                        // Perfect match
-                        const lineBonus = isFirstLine ? 1000000 : 50000;
-                        currentAliasScore = Math.max(currentAliasScore, lineBonus + (alias.length * 1000));
-                    } else if (lineText.includes(alias) || alias.includes(lineText)) {
-                        const shorter = Math.min(alias.length, lineText.length);
-                        const longer = Math.max(alias.length, lineText.length);
-                        const overlap = shorter / longer;
+                    // Direct Similarity Compare
+                    const sim = getSimilarity(lineText, alias);
+                    let bestSubSim = 0;
 
-                        if (overlap >= 0.7) {
-                            const lineBonus = isFirstLine ? 500000 : 20000;
-                            currentAliasScore = Math.max(currentAliasScore, (lineBonus * overlap) + (alias.length * 500));
+                    // Sliding Window Substring Similarity (e.g. OCR: "巨角頭盔夜翼面紗" vs "夜翼面紗")
+                    if (lineText.length >= alias.length) {
+                        for (let i = 0; i <= lineText.length - alias.length; i++) {
+                            const sub = lineText.substr(i, alias.length);
+                            const subSim = getSimilarity(sub, alias);
+                            if (subSim > bestSubSim) bestSubSim = subSim;
+                        }
+                    }
+
+                    const bestSim = Math.max(sim, bestSubSim);
+
+                    if (bestSim >= 0.75) {
+                        // High similarity match (allows typos)
+                        let lineBonus = isFirstLine ? 1000000 : 50000;
+                        if (bestSim === 1.0) {
+                            lineBonus = isFirstLine ? 1500000 : 80000;
+                        }
+
+                        const score = (lineBonus * Math.pow(bestSim, 2)) + (alias.length * 1000);
+                        if (score > currentAliasScore) {
+                            currentAliasScore = score;
+                            matchedLineIdx = line.index;
                         }
                     }
                 });
@@ -70,14 +111,14 @@ const D2R_MATCHER = {
                 if (currentAliasScore > itemEntryMaxScore) {
                     itemEntryMaxScore = currentAliasScore;
                     bestAlias = alias;
+                    bestMatchLineIndex = matchedLineIdx;
                 }
             });
 
             // --- Line 0 Dominance Enforcement ---
-            // If we have a very strong match on the actual first line of the image, 
-            // increase its score exponentially to lock it in.
-            const firstLineMatch = structuredLines[0] && structuredLines[0].clean.includes(bestAlias);
-            if (firstLineMatch) itemEntryMaxScore += 500000;
+            if (bestMatchLineIndex === 0) {
+                itemEntryMaxScore += 500000;
+            }
 
             // --- Numeric vs Text Content Ratio Penalty ---
             const alphanumericCount = (itemName.match(/[a-zA-Z0-9]/g) || []).length;
