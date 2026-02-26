@@ -20,21 +20,36 @@ document.addEventListener('DOMContentLoaded', () => {
             item.stats.toLowerCase().includes(filter.toLowerCase())
         );
 
+        // Grouping logic
+        const groups = {};
         filteredItems.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'item-card';
+            if (!groups[item.category]) groups[item.category] = [];
+            groups[item.category].push(item);
+        });
 
-            const tagLabel = item.tag === 'high' ? '高價' : (item.tag === 'keep' ? '必留' : '特殊');
-            const tagClass = `tag-${item.tag}`;
+        Object.keys(groups).forEach(category => {
+            // Add category header
+            const header = document.createElement('div');
+            header.className = 'category-group-header';
+            header.innerHTML = `<h3>${category}</h3>`;
+            cardGrid.appendChild(header);
 
-            card.innerHTML = `
-                <div class="card-tag ${tagClass}">${tagLabel}</div>
-                <div class="item-category">${item.category}</div>
-                <div class="item-name">${item.name}</div>
-                <div class="item-stats">${item.stats.replace(/\\n/g, '<br>')}</div>
-                <div class="item-notes">${item.note.replace(/\\n/g, '<br>')}</div>
-            `;
-            cardGrid.appendChild(card);
+            // Add items under this category
+            groups[category].forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+
+                const tagLabel = item.tag === 'high' ? '高價' : (item.tag === 'keep' ? '必留' : (item.tag === 'special' ? '特殊' : '收藏'));
+                const tagClass = `tag-${item.tag}`;
+
+                card.innerHTML = `
+                    <div class="card-tag ${tagClass}">${tagLabel}</div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-stats">${item.stats.replace(/\\n/g, '<br>')}</div>
+                    <div class="item-notes">${item.note.replace(/\\n/g, '<br>')}</div>
+                `;
+                cardGrid.appendChild(card);
+            });
         });
     }
 

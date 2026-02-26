@@ -148,9 +148,24 @@ body {
     margin-bottom: 0.5rem;
 }
 
+.category-group-header {
+    grid-column: 1 / -1;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--gold);
+}
+
+.category-group-header h3 {
+    font-size: 1.5rem;
+    color: var(--gold-bright);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1.5rem;
 }
 
