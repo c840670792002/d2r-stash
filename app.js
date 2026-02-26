@@ -1,6 +1,6 @@
 /**
  * D2R Library - Main Application Logic
- * Refactored for stability and Smart Diagnosis (BETA) integration.
+ * Automated Diagnosis via OCR (Tesseract.js)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultBody = document.getElementById('result-body');
     const previewImg = document.getElementById('preview-img');
     const mainView = document.getElementById('main-view');
+    const btnClear = document.getElementById('clear-diagnosis');
 
     // --- 3. Rendering Engine ---
     function renderItems(filter = '') {
@@ -28,27 +29,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = D2R_DATA[currentSection];
         if (!data) return;
 
-        // Update Headers
         if (sectionTitle) sectionTitle.textContent = data.title;
         if (sectionDesc) sectionDesc.textContent = data.desc;
 
         cardGrid.innerHTML = '';
 
-        // Filter Logic
         const filteredItems = data.items.filter(item =>
             item.name.toLowerCase().includes(filter.toLowerCase()) ||
             item.category.toLowerCase().includes(filter.toLowerCase()) ||
             item.stats.toLowerCase().includes(filter.toLowerCase())
         );
 
-        // Group by Category
         const groups = {};
         filteredItems.forEach(item => {
             if (!groups[item.category]) groups[item.category] = [];
             groups[item.category].push(item);
         });
 
-        // DOM Injection
         Object.keys(groups).forEach(category => {
             const header = document.createElement('div');
             header.className = 'category-group-header';
@@ -59,12 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const card = document.createElement('div');
                 card.className = 'item-card';
 
-                const tagLabelMap = {
-                    'high': '高價',
-                    'keep': '必留',
-                    'special': '特殊',
-                    '收藏': '收藏'
-                };
+                const tagLabelMap = { 'high': '高價', 'keep': '必留', 'special': '特殊', '收藏': '收藏' };
                 const tagLabel = tagLabelMap[item.tag] || '保留';
                 const tagClass = `tag-${item.tag || 'keep'}`;
 
@@ -95,84 +87,129 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 5. Event Listeners ---
+    // --- 5. Automated Diagnosis (OCR) Logic ---
+    async function performOCR(imageSrc) {
+        resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在初始化辨識引擎...</p></div>';
 
-    // Sidebar Navigation
+        try {
+            const worker = await Tesseract.createWorker('chi_tra');
+            resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在從截圖中提取文字...</p></div>';
+
+            const { data: { text } } = await worker.recognize(imageSrc);
+            console.log('Recognized Text:', text);
+            await worker.terminate();
+
+            processRecognitionResult(text);
+        } catch (err) {
+            console.error(err);
+            resultBody.innerHTML = '<div class="analysis-item"><p>❌ 辨識出錯。可能是網路問題或圖片格式支不援。</p></div>';
+        }
+    }
+
+    function processRecognitionResult(rawText) {
+        // Simple heuristic: search for item names in our database
+        const normalizedText = rawText.replace(/\s+/g, '');
+        let bestMatch = null;
+        let maxScore = 0;
+
+        // Iterate through all categories in D2R_DATA
+        for (let section in D2R_DATA) {
+            D2R_DATA[section].items.forEach(item => {
+                // Find pure name (strip rarity/base from parentheses)
+                const pureName = item.name.split(' (')[0];
+                if (normalizedText.includes(pureName)) {
+                    bestMatch = item;
+                    maxScore = 100; // Perfect name match
+                }
+            });
+        }
+
+        if (bestMatch) {
+            resultBody.innerHTML = `
+                <div class="analysis-item">
+                    <p><span class="analysis-label">識別結果：</span><span class="status-keep">${bestMatch.name.split(' (')[0]}</span></p>
+                    <div class="match-box">
+                        <p><span class="analysis-label">指南建議：</span>${bestMatch.tag === 'high' ? '🔥 價值極高，務必保留！' : '✅ 建議保留'}</p>
+                        <p><span class="analysis-label">關鍵變量：</span>${bestMatch.stats}</p>
+                        <hr style="opacity: 0.1; margin: 0.5rem 0;">
+                        <p><span class="analysis-label">筆記：</span>${bestMatch.note}</p>
+                    </div>
+                    <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary);">提示：OCR 僅辨識品名，詳細變量請手動對照指南。</p>
+                </div>
+            `;
+        } else {
+            resultBody.innerHTML = `
+                <div class="analysis-item">
+                    <p>🔍 <span class="analysis-label">未匹配到特定裝備</span></p>
+                    <p>我未能從截圖中辨識出高價值暗金或套裝的名稱。</p>
+                    <div class="match-box" style="border-color: #ff4444;">
+                        <p><strong>可能原因：</strong></p>
+                        <ul style="margin-left: 1.5rem; font-size: 0.9rem;">
+                            <li>這是一件過渡用的普通裝備（指南已剔除）。</li>
+                            <li>截圖字體太模糊或背景干擾過強。</li>
+                            <li>這是一件「黃色或藍色」極品，需參閱戒指/咒符鑑定標準。</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // --- 6. Event Listeners ---
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
-            // UI State
             navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
-
-            // Logic State
             currentSection = link.getAttribute('data-section');
             if (searchInput) searchInput.value = '';
-
             updateVisibility();
         });
     });
 
-    // Search Box
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             renderItems(e.target.value);
         });
     }
 
-    // Paste for Diagnosis
     window.addEventListener('paste', (e) => {
         if (currentSection !== 'diagnosis') return;
 
         const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
         if (!items) return;
 
-        let imageFound = false;
         for (let i = 0; i < items.length; i++) {
             if (items[i].type.indexOf('image') !== -1) {
-                imageFound = true;
                 const blob = items[i].getAsFile();
                 const reader = new FileReader();
 
-                // Show Loading
-                if (diagnosisResult && resultBody) {
-                    diagnosisResult.classList.remove('hidden');
-                    resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在解析截圖數據...</p></div>';
-                }
+                diagnosisResult.classList.remove('hidden');
 
                 reader.onload = (event) => {
+                    const imageSrc = event.target.result;
                     if (previewImg) {
-                        previewImg.src = event.target.result;
+                        previewImg.src = imageSrc;
                         previewImg.classList.remove('hidden');
                     }
                     const dropZoneContent = document.querySelector('.drop-zone-content');
                     if (dropZoneContent) dropZoneContent.classList.add('hidden');
-                    startAnalysis();
+
+                    performOCR(imageSrc);
                 };
                 reader.readAsDataURL(blob);
             }
         }
     });
 
-    function startAnalysis() {
-        if (!diagnosisResult || !resultBody) return;
-
-        diagnosisResult.classList.remove('hidden');
-        resultBody.innerHTML = `
-            <div class="analysis-item">
-                <p>📸 <span class="analysis-label">截圖已成功接收</span></p>
-                <p>請將此畫面截圖發送給 <strong>Antigravity (AI 助理)</strong>，或直接在此對話中貼上截圖。</p>
-                <hr style="opacity: 0.1; margin: 1rem 0;">
-                <p><strong>助理診斷項目：</strong></p>
-                <ul style="margin-left: 1.5rem; color: var(--text-dim); font-size: 0.9rem;">
-                    <li>辨識品名 (Unique/Base Name)</li>
-                    <li>分析變量 (Variables Comparison)</li>
-                    <li>最終評價 (Keep/Discard Rating)</li>
-                </ul>
-                <p style="margin-top: 1rem; color: var(--gold-bright);">系統已準備就緒，請隨時貼上截圖給我分析！</p>
-            </div>
-        `;
+    if (btnClear) {
+        btnClear.addEventListener('click', () => {
+            diagnosisResult.classList.add('hidden');
+            previewImg.classList.add('hidden');
+            previewImg.src = '';
+            document.querySelector('.drop-zone-content').classList.remove('hidden');
+        });
     }
 
-    // --- 6. Initialization ---
+    // --- 7. Initialization ---
     updateVisibility();
 });
