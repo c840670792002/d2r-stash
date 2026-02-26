@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!cardGrid || !D2R_DATA) return;
 
         const data = D2R_DATA[currentSection];
-        // Handle normal sections (Guide data)
         if (data) {
             if (sectionTitle) sectionTitle.textContent = data.title;
             if (sectionDesc) sectionDesc.textContent = data.desc;
@@ -68,12 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- Global Unique Search Integration ---
-        // If searching, also look into the full unique dictionary
         if (filter.length >= 2 && typeof D2R_ALL_UNIQUES !== 'undefined') {
             const globalResults = D2R_ALL_UNIQUES.filter(name =>
                 name.includes(filter) &&
-                !JSON.stringify(D2R_DATA).includes(name.split(' (')[0]) // Avoid duplicates already in guide
+                !JSON.stringify(D2R_DATA).includes(name.split(' (')[0])
             );
 
             if (globalResults.length > 0) {
@@ -122,58 +119,75 @@ document.addEventListener('DOMContentLoaded', () => {
             const worker = await Tesseract.createWorker('chi_tra');
             resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在從截圖中提取文字...</p></div>';
 
-            const { data: { text } } = await worker.recognize(imageSrc);
+            const { data: { text, lines } } = await worker.recognize(imageSrc);
             console.log('Recognized Text:', text);
             await worker.terminate();
 
-            processRecognitionResult(text);
+            // Pass lines for position-based priority
+            processRecognitionResult(text, lines);
         } catch (err) {
             console.error(err);
             resultBody.innerHTML = '<div class="analysis-item"><p>❌ 辨識出錯。可能是網路問題或圖片格式支不援。</p></div>';
         }
     }
 
-    function processRecognitionResult(rawText) {
+    function processRecognitionResult(rawText, lines = []) {
         const normalizedText = rawText.replace(/\s+/g, '');
+        // Extract top 3 lines of text for name priority
+        const topLines = lines.slice(0, 3).map(l => l.text.replace(/\s+/g, '')).join('|');
+
         let bestMatch = null;
         let maxScore = 0;
         let matchIsGlobal = false;
 
-        // --- Helper: Scoring Logic ---
         function calculateScore(itemName, isGlobal = false) {
             const cleanItemName = itemName.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
             const cleanOCRText = normalizedText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
 
-            // 1. Exact Substring Match: Massive weight based on length
-            if (cleanOCRText.includes(cleanItemName)) {
-                return (isGlobal ? 500 : 1000) + (cleanItemName.length * 20);
+            let score = 0;
+
+            // 1. Exact Match Priority (Check if item name is in the top lines)
+            if (topLines.includes(cleanItemName)) {
+                score += 5000 + (cleanItemName.length * 100);
+            } else if (cleanOCRText.includes(cleanItemName)) {
+                score += 1000 + (cleanItemName.length * 50);
             }
 
-            // 2. Fuzzy Match: Char overlap, but penalize short noisy matches
+            // 2. Fuzzy Match
             const textChars = cleanItemName.replace(/[0-9]/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
-            if (textChars.length < 2) return 0;
+            if (textChars.length >= 2) {
+                let matchCount = 0;
+                const uniqueChars = [...new Set(textChars.split(''))];
+                uniqueChars.forEach(char => {
+                    if (normalizedText.includes(char)) matchCount++;
+                });
 
-            let matchCount = 0;
-            const uniqueChars = [...new Set(textChars.split(''))];
-            uniqueChars.forEach(char => {
-                if (normalizedText.includes(char)) matchCount++;
-            });
-
-            // Require at least 70% match AND at least 2 chars
-            if (matchCount / uniqueChars.length >= 0.7 && matchCount >= 2) {
-                // Scoring: Longer names get much higher absolute scores to beat short noise
-                return (isGlobal ? 100 : 200) + (matchCount * 30);
+                if (matchCount / uniqueChars.length >= 0.7) {
+                    score += (matchCount * 40);
+                }
             }
-            return 0;
+
+            // 3. Numeric Penalty / Protection
+            // If the name is mostly numeric (like "15/40"), penalize it if not found in top lines
+            // and ensure it doesn't beat a real text-based item name easily.
+            const isNumericHeavy = cleanItemName.match(/[0-9]/) && cleanItemName.length <= 5;
+            if (isNumericHeavy && !topLines.includes(cleanItemName)) {
+                score -= 2000;
+            }
+
+            // Global vs Guide weight
+            if (isGlobal) score *= 0.8;
+
+            return score;
         }
 
-        // --- Pass 1: Check D2R_DATA (Guide items) ---
+        // Pass 1: Guide
         for (let section in D2R_DATA) {
             D2R_DATA[section].items.forEach(item => {
                 const names = item.name.replace(/[()]/g, '/').split('/').map(n => n.trim().replace(/\s+/g, '')).filter(n => n.length >= 2);
                 names.forEach(name => {
                     const score = calculateScore(name, false);
-                    if (score > maxScore) {
+                    if (score > maxScore && score > 0) {
                         maxScore = score;
                         bestMatch = item;
                         matchIsGlobal = false;
@@ -182,11 +196,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- Pass 2: Check D2R_ALL_UNIQUES (Global fallback) ---
+        // Pass 2: Global
         if (typeof D2R_ALL_UNIQUES !== 'undefined') {
             D2R_ALL_UNIQUES.forEach(name => {
                 const score = calculateScore(name, true);
-                if (score > maxScore) {
+                if (score > maxScore && score > 0) {
                     maxScore = score;
                     bestMatch = {
                         name: name,
@@ -210,14 +224,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <hr style="opacity: 0.1; margin: 0.5rem 0;">
                         <p><span class="analysis-label">筆記：</span>${bestMatch.note}</p>
                     </div>
-                    <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary);">提示：OCR 僅辨識品名，詳細變量請手動對照指南庫。</p>
                 </div>
             `;
         } else {
             resultBody.innerHTML = `
                 <div class="analysis-item">
                     <p>🔍 <span class="analysis-label">未匹配到特定裝備</span></p>
-                    <p>未能從截圖中辨識出高價值暗金、套裝或常見暗金名稱。系統已採用長文本優先權重。</p>
+                    <p>未能清晰辨識。提示：請確保截圖包含完整的黃色/暗金品名（通常在最上方）。</p>
                 </div>
             `;
         }
@@ -278,6 +291,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 7. Initialization ---
     updateVisibility();
 });
