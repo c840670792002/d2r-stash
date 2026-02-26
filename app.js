@@ -1,53 +1,72 @@
+/**
+ * D2R Library - Main Application Logic
+ * Refactored for stability and Smart Diagnosis (BETA) integration.
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Data & State Initialization
+    // --- 1. State Management ---
     let currentSection = 'uniques';
+
+    // --- 2. Element Selectors ---
     const cardGrid = document.getElementById('card-grid');
     const searchInput = document.getElementById('search-input');
     const navLinks = document.querySelectorAll('.nav-links li');
     const sectionTitle = document.getElementById('section-title');
     const sectionDesc = document.getElementById('section-desc');
 
-    // 2. Navigation Elements (Diagnosis View)
     const diagnosisSection = document.getElementById('diagnosis-section');
     const contentHeader = document.querySelector('.content-header');
-    const previewImg = document.getElementById('preview-img');
     const diagnosisResult = document.getElementById('diagnosis-result');
     const resultBody = document.getElementById('result-body');
+    const previewImg = document.getElementById('preview-img');
     const mainView = document.getElementById('main-view');
 
-    // 3. UI Logic Functions
+    // --- 3. Rendering Engine ---
     function renderItems(filter = '') {
-        const data = D2R_DATA[currentSection];
-        if (!data || !cardGrid) return;
+        if (!cardGrid || !D2R_DATA) return;
 
-        sectionTitle.textContent = data.title;
-        sectionDesc.textContent = data.desc;
+        const data = D2R_DATA[currentSection];
+        if (!data) return;
+
+        // Update Headers
+        if (sectionTitle) sectionTitle.textContent = data.title;
+        if (sectionDesc) sectionDesc.textContent = data.desc;
+
         cardGrid.innerHTML = '';
 
+        // Filter Logic
         const filteredItems = data.items.filter(item =>
             item.name.toLowerCase().includes(filter.toLowerCase()) ||
             item.category.toLowerCase().includes(filter.toLowerCase()) ||
             item.stats.toLowerCase().includes(filter.toLowerCase())
         );
 
+        // Group by Category
         const groups = {};
         filteredItems.forEach(item => {
             if (!groups[item.category]) groups[item.category] = [];
             groups[item.category].push(item);
         });
 
+        // DOM Injection
         Object.keys(groups).forEach(category => {
             const header = document.createElement('div');
             header.className = 'category-group-header';
-            header.innerHTML = `<h3>${category}</h3>`;
+            header.innerHTML = `<h3>--- ${category} ---</h3>`;
             cardGrid.appendChild(header);
 
             groups[category].forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'item-card';
 
-                const tagLabel = item.tag === 'high' ? '高價' : (item.tag === 'keep' ? '必留' : (item.tag === 'special' ? '特殊' : '收藏'));
-                const tagClass = `tag-${item.tag}`;
+                const tagLabelMap = {
+                    'high': '高價',
+                    'keep': '必留',
+                    'special': '特殊',
+                    '收藏': '收藏'
+                };
+                const tagLabel = tagLabelMap[item.tag] || '保留';
+                const tagClass = `tag-${item.tag || 'keep'}`;
 
                 card.innerHTML = `
                     <div class="card-tag ${tagClass}">${tagLabel}</div>
@@ -60,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- 4. Visibility Controller ---
     function updateVisibility() {
         if (!diagnosisSection || !contentHeader || !mainView) return;
 
@@ -71,55 +91,62 @@ document.addEventListener('DOMContentLoaded', () => {
             diagnosisSection.classList.add('hidden');
             contentHeader.classList.remove('hidden');
             mainView.classList.remove('hidden');
-            renderItems(searchInput.value);
+            renderItems(searchInput ? searchInput.value : '');
         }
     }
 
-    // 4. Event Listeners Initialization
+    // --- 5. Event Listeners ---
 
-    // Search Listener
+    // Sidebar Navigation
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            // UI State
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+
+            // Logic State
+            currentSection = link.getAttribute('data-section');
+            if (searchInput) searchInput.value = '';
+
+            updateVisibility();
+        });
+    });
+
+    // Search Box
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             renderItems(e.target.value);
         });
     }
 
-    // Navigation Listeners
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-            currentSection = link.getAttribute('data-section');
-            searchInput.value = '';
-            updateVisibility();
-        });
-    });
-
-    // Smart Diagnosis (Paste) Listener
+    // Paste for Diagnosis
     window.addEventListener('paste', (e) => {
         if (currentSection !== 'diagnosis') return;
 
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        let foundImage = false;
+        const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+        if (!items) return;
 
+        let imageFound = false;
         for (let i = 0; i < items.length; i++) {
             if (items[i].type.indexOf('image') !== -1) {
-                foundImage = true;
+                imageFound = true;
                 const blob = items[i].getAsFile();
                 const reader = new FileReader();
 
-                resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在讀取截圖數據...</p></div>';
-                diagnosisResult.classList.remove('hidden');
+                // Show Loading
+                if (diagnosisResult && resultBody) {
+                    diagnosisResult.classList.remove('hidden');
+                    resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在解析截圖數據...</p></div>';
+                }
 
                 reader.onload = (event) => {
-                    previewImg.src = event.target.result;
-                    previewImg.classList.remove('hidden');
+                    if (previewImg) {
+                        previewImg.src = event.target.result;
+                        previewImg.classList.remove('hidden');
+                    }
                     const dropZoneContent = document.querySelector('.drop-zone-content');
                     if (dropZoneContent) dropZoneContent.classList.add('hidden');
                     startAnalysis();
-                };
-                reader.onerror = () => {
-                    resultBody.innerHTML = '<div class="analysis-item"><p>❌ 讀取圖片失敗，請再試一次。</p></div>';
                 };
                 reader.readAsDataURL(blob);
             }
@@ -128,23 +155,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startAnalysis() {
         if (!diagnosisResult || !resultBody) return;
+
         diagnosisResult.classList.remove('hidden');
         resultBody.innerHTML = `
             <div class="analysis-item">
-                <p>📸 <span class="analysis-label">截圖已接收</span></p>
-                <p>由於網頁端權限限制，請將此截圖同步發送給 <strong>Antigravity (AI 助理)</strong>。</p>
+                <p>📸 <span class="analysis-label">截圖已成功接收</span></p>
+                <p>請將此畫面截圖發送給 <strong>Antigravity (AI 助理)</strong>，或直接在此對話中貼上截圖。</p>
                 <hr style="opacity: 0.1; margin: 1rem 0;">
-                <p><strong>助理將為你比對：</strong></p>
-                <ul style="margin-left: 1.5rem; color: var(--text-dim);">
-                    <li>品名識別 (Uniques/Bases/Sets)</li>
-                    <li>屬性量化 (Variable Roll Analysis)</li>
-                    <li>最終判定 (Keep or Discard)</li>
+                <p><strong>助理診斷項目：</strong></p>
+                <ul style="margin-left: 1.5rem; color: var(--text-dim); font-size: 0.9rem;">
+                    <li>辨識品名 (Unique/Base Name)</li>
+                    <li>分析變量 (Variables Comparison)</li>
+                    <li>最終評價 (Keep/Discard Rating)</li>
                 </ul>
-                <p style="margin-top: 1rem; color: var(--gold-bright);">請直接在對話框中貼上截圖，我會立刻為你分析！</p>
+                <p style="margin-top: 1rem; color: var(--gold-bright);">系統已準備就緒，請隨時貼上截圖給我分析！</p>
             </div>
         `;
     }
 
-    // 5. Initial Render
+    // --- 6. Initialization ---
     updateVisibility();
 });
