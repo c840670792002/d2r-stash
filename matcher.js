@@ -41,11 +41,14 @@ const D2R_MATCHER = {
             aliasParts.forEach(alias => {
                 let currentAliasScore = 0;
 
-                // 1. Line-based Matching
+                // 1. Line-based Matching (Aggressive First-Line Priority)
                 structuredLines.slice(0, 8).forEach(line => {
                     const lineText = line.clean;
+                    const isFirstLine = line.index === 0;
+
                     if (lineText === alias) {
-                        const lineBonus = (line.index < 3) ? 100000 : 30000;
+                        // Perfect match
+                        const lineBonus = isFirstLine ? 1000000 : 50000;
                         currentAliasScore = Math.max(currentAliasScore, lineBonus + (alias.length * 1000));
                     } else if (lineText.includes(alias) || alias.includes(lineText)) {
                         const shorter = Math.min(alias.length, lineText.length);
@@ -53,13 +56,13 @@ const D2R_MATCHER = {
                         const overlap = shorter / longer;
 
                         if (overlap >= 0.7) {
-                            const lineBonus = (line.index < 3) ? 50000 : 10000;
+                            const lineBonus = isFirstLine ? 500000 : 20000;
                             currentAliasScore = Math.max(currentAliasScore, (lineBonus * overlap) + (alias.length * 500));
                         }
                     }
                 });
 
-                // 2. Full Text Substring
+                // 2. Full Text Substring (Fallback)
                 if (currentAliasScore < 8000 && cleanFullText.includes(alias)) {
                     currentAliasScore = Math.max(currentAliasScore, 8000 + (alias.length * 100));
                 }
@@ -69,6 +72,12 @@ const D2R_MATCHER = {
                     bestAlias = alias;
                 }
             });
+
+            // --- Line 0 Dominance Enforcement ---
+            // If we have a very strong match on the actual first line of the image, 
+            // increase its score exponentially to lock it in.
+            const firstLineMatch = structuredLines[0] && structuredLines[0].clean.includes(bestAlias);
+            if (firstLineMatch) itemEntryMaxScore += 500000;
 
             // --- Numeric vs Text Content Ratio Penalty ---
             const alphanumericCount = (itemName.match(/[a-zA-Z0-9]/g) || []).length;
