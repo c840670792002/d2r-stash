@@ -6,7 +6,7 @@ const D2R_DATA = {
             // 飾品與珠寶
             { category: "項鍊", name: "貓眼 (貓眼 | 飾品)", stats: "攻速、跑速", note: "亞馬遜/物理職業重要裝備。", tag: "keep" },
             { category: "項鍊", name: "亞特瑪的聖甲蟲 (亞特瑪 | 飾品)", stats: "傷害加深 詛咒", note: "物理職業破物免神器。", tag: "keep" },
-            { category: "項鍊", name: "大軍之怒 (大軍 | 飾品)", stats: "攻速、致命一擊", note: "物理職業終極項鍊，後期標配。", tag: "keep" },
+            { category: "項鍊", name: "大軍之怒 (大軍 | 飾品 | 護身符)", stats: "攻速、致命一擊", note: "物理職業終極項鍊，後期標配。", tag: "keep" },
             { category: "項鍊", name: "馬拉的萬花筒 (馬拉 | 飾品)", stats: "抗性 25~30", note: "法系畢業項鍊，30抗最貴。", tag: "high" },
             { category: "項鍊", name: "金屬網格 (金屬網格 | 飾品)", stats: "抗性 30、準確率", note: "增加防禦與準確，高端物理職業使用。", tag: "special" },
             { category: "戒指", name: "拿各的戒指 (拿各 | 飾品)", stats: "MF 25%~30%", note: "30% 滿值才有交易價值。", tag: "special" },
@@ -108,9 +108,9 @@ const D2R_DATA = {
         title: "套裝保留指南",
         desc: "具有高價值的單件與特定用途之實用全套。",
         items: [
-            { category: "高價值單件", name: "安置手 (門徒 | 手套)", stats: "350% 對惡魔傷害 / 50% 火抗", note: "物理系畢業手套。", tag: "keep" },
+            { category: "高價值單件", name: "按手禮 (祭典手套 | 套裝手 | 傳記)", stats: "350% 對惡魔傷害 / 50% 火抗", note: "物理系畢業手套。門徒套裝零件。", tag: "keep" },
             { category: "高價值單件", name: "誦唸珠 (門徒 | 項鍊)", stats: "高抗性", note: "極稀有，具收藏價值。", tag: "special" },
-            { category: "高價值單件", name: "吉永之臉 (孤兒的呼喊 | 頭盔)", stats: "35% 壓碎打擊 (CB) / 15% 致命", note: "物理系神頭，打王必備。", tag: "keep" },
+            { category: "高價值單件", name: "吉永之臉 (吉永 | 套裝頭 | 翼盔)", stats: "35% 壓碎打擊 (CB) / 15% 致命", note: "物理系神頭，打王必備。又稱孤兒頭。", tag: "keep" },
             { category: "高價值單件", name: "艾爾多的成長 (艾爾多的守望 | 鞋子)", stats: "50% 火抗 / 50生命", note: "補抗性與生命的神鞋。", tag: "keep" },
             { category: "高價值單件", name: "塔格奧的手套 (塔格奧的手 | 塔格奧的化身)", stats: "20% FCR / 30% 毒傷", note: "法系通用，毒死靈必備。", tag: "keep" },
             { category: "高價值單件", name: "塔格奧之束縛 (塔格奧的化身 | 腰帶)", stats: "無法冰凍", note: "死靈法師撐抗必備。", tag: "special" },
