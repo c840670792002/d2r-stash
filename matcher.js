@@ -26,66 +26,57 @@ const D2R_MATCHER = {
 
         const calculateScore = (itemEntry, isGlobal = false) => {
             const itemName = typeof itemEntry === 'string' ? itemEntry : itemEntry.name;
-            const aliasParts = itemName.replace(/[()]/g, '/').split('/').map(n => n.trim().replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '')).filter(n => n.length >= 2);
+            const cleanItemName = itemName.replace(/[()|]/g, '/');
+            const aliasParts = cleanItemName.split('/').map(n => n.trim().replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '')).filter(n => n.length >= 2);
 
             let itemEntryMaxScore = 0;
 
-            aliasParts.forEach(name => {
-                let currentMatchScore = 0;
+            aliasParts.forEach(alias => {
+                let currentAliasScore = 0;
 
-                // 1. Line-based Matching (Highest Priority)
-                structuredLines.slice(0, 6).forEach(line => {
-                    if (line.clean === name) {
-                        // Exact line match: Highest priority
-                        currentMatchScore = Math.max(currentMatchScore, 30000 + (2000 / (line.index + 1)) + (name.length * 200));
-                    } else if (line.clean.includes(name) || name.includes(line.clean)) {
-                        // Partial or container match: Calculate overlap
-                        const shorterLen = Math.min(name.length, line.clean.length);
-                        const longerLen = Math.max(name.length, line.clean.length);
-                        const overlapRatio = shorterLen / longerLen;
+                // 1. Line-based Matching (Aggressive Priority)
+                structuredLines.slice(0, 8).forEach(line => {
+                    const lineText = line.clean;
+                    if (lineText === alias) {
+                        // Perfect match in a line
+                        const lineBonus = (line.index < 3) ? 100000 : 30000; // Total dominance for top lines
+                        currentAliasScore = Math.max(currentAliasScore, lineBonus + (alias.length * 1000));
+                    } else if (lineText.includes(alias) || alias.includes(lineText)) {
+                        const shorter = Math.min(alias.length, lineText.length);
+                        const longer = Math.max(alias.length, lineText.length);
+                        const overlap = shorter / longer;
 
-                        // If it's the item name itself being partial in a line at the top
-                        if (overlapRatio >= 0.7) {
-                            currentMatchScore = Math.max(currentMatchScore, 15000 * overlapRatio + (1000 / (line.index + 1)));
-                        } else if (line.index === 0 && overlapRatio >= 0.5) {
-                            // Very high priority for first line even with more noise
-                            currentMatchScore = Math.max(currentMatchScore, 10000 * overlapRatio);
+                        if (overlap >= 0.6) {
+                            const lineBonus = (line.index < 3) ? 50000 : 10000;
+                            currentAliasScore = Math.max(currentAliasScore, (lineBonus * overlap) + (alias.length * 500));
                         }
                     }
                 });
 
-                // 2. Full Text Substring (Secondary)
-                if (currentMatchScore < 5000 && cleanFullText.includes(name)) {
-                    currentMatchScore = Math.max(currentMatchScore, 5000 + (name.length * 20));
+                // 2. Full Text Substring (Fallback)
+                if (currentAliasScore < 5000 && cleanFullText.includes(alias)) {
+                    // Item names rarely match purely as a substring outside of lines unless OCR failed line breaks
+                    currentAliasScore = Math.max(currentAliasScore, 5000 + (alias.length * 50));
                 }
 
-                // 3. Fuzzy Logic (Char overlap) - Only if length is decent
-                if (currentMatchScore < 1000 && name.length >= 3) {
-                    let matchCount = 0;
-                    const nameChars = name.replace(/[0-9]/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
-                    const uniqueChars = [...new Set(nameChars.split(''))];
-                    if (uniqueChars.length > 0) {
-                        uniqueChars.forEach(char => {
-                            if (cleanFullText.includes(char)) matchCount++;
-                        });
-                        const ratio = matchCount / uniqueChars.length;
-                        if (ratio >= 0.8) {
-                            currentMatchScore = Math.max(currentMatchScore, 3000 * ratio + (matchCount * 20));
-                        }
-                    }
-                }
-
-                if (currentMatchScore > itemEntryMaxScore) itemEntryMaxScore = currentMatchScore;
+                if (currentAliasScore > itemEntryMaxScore) itemEntryMaxScore = currentAliasScore;
             });
 
-            // --- Numeric Penalty ---
-            // If the item name is purely numeric or special (e.g. "3/20/20") 
-            // and the OCR top line is Chinese, we kill the numeric score.
-            const hasChineseInName = itemName.match(/[\u4e00-\u9fa5]/);
-            const topLinesHaveChinese = structuredLines.slice(0, 3).some(l => l.clean.match(/[\u4e00-\u9fa5]/));
+            // --- Numeric vs Text Content Ratio Penalty ---
+            // If the item name is predominantly numeric/symbols (like "3/20/20")
+            // but the top of the OCR is predominantly Chinese, heavily penalize.
+            const alphanumericCount = (itemName.match(/[a-zA-Z0-9]/g) || []).length;
+            const totalCount = itemName.length;
+            const isNumericHeavy = (alphanumericCount / totalCount) > 0.4; // 40%+ numbers/letters (common in stats)
 
-            if (!hasChineseInName && topLinesHaveChinese) {
-                itemEntryMaxScore -= 25000;
+            if (isNumericHeavy) {
+                const topLinesContent = structuredLines.slice(0, 3).map(l => l.clean).join('');
+                const topHasStrongChinese = (topLinesContent.match(/[\u4e00-\u9fa5]/g) || []).length >= 3;
+                const nameHasFewerChinese = (itemName.match(/[\u4e00-\u9fa5]/g) || []).length <= 2;
+
+                if (topHasStrongChinese && nameHasFewerChinese) {
+                    itemEntryMaxScore -= 60000; // Absolute shutdown for numeric items when title is Chinese
+                }
             }
 
             if (isGlobal) itemEntryMaxScore *= 0.8;
