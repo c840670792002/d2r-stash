@@ -3,6 +3,10 @@
  * Automated Diagnosis via OCR (Tesseract.js)
  */
 
+document.addEventListener('DOMContentLoaded', () => {
+    // Check for initApp already defined (or directly run logic)
+});
+
 function initApp() {
     // --- 1. State Management ---
     let currentSection = 'uniques';
@@ -123,7 +127,6 @@ function initApp() {
             console.log('Recognized Text:', text);
             await worker.terminate();
 
-            // Pass lines for position-based priority
             processRecognitionResult(text, lines);
         } catch (err) {
             console.error(err);
@@ -133,66 +136,86 @@ function initApp() {
 
     function processRecognitionResult(rawText, lines = []) {
         const normalizedText = rawText.replace(/\s+/g, '');
-        // Extract top 3 lines of text for name priority
-        const topLines = lines.slice(0, 3).map(l => l.text.replace(/\s+/g, '')).join('|');
+        const cleanOCRText = normalizedText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+
+        // Convert lines to a structured object with priority
+        const structuredLines = lines.map((l, index) => {
+            const clean = l.text.replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+            return { clean, original: l.text.trim(), index };
+        }).filter(l => l.clean.length >= 2);
 
         let bestMatch = null;
         let maxScore = 0;
         let matchIsGlobal = false;
 
-        function calculateScore(itemName, isGlobal = false) {
-            const cleanItemName = itemName.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
-            const cleanOCRText = normalizedText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+        function calculateScore(itemEntry, isGlobal = false) {
+            // Support both object entries (data.js) and string entries (unique_names.js)
+            const itemName = typeof itemEntry === 'string' ? itemEntry : itemEntry.name;
+            const names = itemName.replace(/[()]/g, '/').split('/').map(n => n.trim().replace(/\s+/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '')).filter(n => n.length >= 2);
 
-            let score = 0;
+            let itemMaxScore = 0;
 
-            // 1. Exact Match Priority (Check if item name is in the top lines)
-            if (topLines.includes(cleanItemName)) {
-                score += 5000 + (cleanItemName.length * 100);
-            } else if (cleanOCRText.includes(cleanItemName)) {
-                score += 1000 + (cleanItemName.length * 50);
-            }
+            names.forEach(name => {
+                let currentMatchScore = 0;
 
-            // 2. Fuzzy Match
-            const textChars = cleanItemName.replace(/[0-9]/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
-            if (textChars.length >= 2) {
-                let matchCount = 0;
-                const uniqueChars = [...new Set(textChars.split(''))];
-                uniqueChars.forEach(char => {
-                    if (normalizedText.includes(char)) matchCount++;
-                });
-
-                if (matchCount / uniqueChars.length >= 0.7) {
-                    score += (matchCount * 40);
+                // Priority 1: Exact Full-Line Match (VERY HIGH)
+                // If a line in the OCR exactly matches the item name, it's almost certainly it.
+                const lineMatch = structuredLines.find(l => l.clean === name);
+                if (lineMatch) {
+                    // Give priority to lines appearing earlier (like the first line)
+                    currentMatchScore += 10000 + (1000 / (lineMatch.index + 1)) + (name.length * 100);
                 }
+
+                // Priority 2: Substring Match of a Line
+                // Check if any single line *contains* the name (less weight than full line)
+                const partialLineMatch = structuredLines.find(l => l.clean.includes(name));
+                if (partialLineMatch) {
+                    currentMatchScore += 5000 + (name.length * 50);
+                }
+
+                // Priority 3: Global Substring (Fallback)
+                if (!currentMatchScore && cleanOCRText.includes(name)) {
+                    currentMatchScore += 1000 + (name.length * 10);
+                }
+
+                // Fuzzy Fallback (least reliable)
+                if (!currentMatchScore) {
+                    const textChars = name.replace(/[0-9]/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
+                    if (textChars.length >= 3) {
+                        let matchCount = 0;
+                        const uniqueChars = [...new Set(textChars.split(''))];
+                        uniqueChars.forEach(char => {
+                            if (cleanOCRText.includes(char)) matchCount++;
+                        });
+                        if (matchCount / uniqueChars.length >= 0.8) {
+                            currentMatchScore += (matchCount * 40);
+                        }
+                    }
+                }
+
+                if (currentMatchScore > itemMaxScore) itemMaxScore = currentMatchScore;
+            });
+
+            // Specific Penalties to fix user-reported errors:
+            // 1. If matching "bases" category, and the match is only a partial word in a line (like '戰鬥' in '戰鬥腰帶'), slash the score.
+            if (itemEntry.category === "法師法杖" && names.some(n => n === "戰鬥")) {
+                const hasBattleBelt = structuredLines.some(l => l.clean.includes("戰鬥腰帶"));
+                if (hasBattleBelt) itemMaxScore -= 8000;
             }
 
-            // 3. Numeric Penalty / Protection
-            // If the name is mostly numeric (like "15/40"), penalize it if not found in top lines
-            // and ensure it doesn't beat a real text-based item name easily.
-            const isNumericHeavy = cleanItemName.match(/[0-9]/) && cleanItemName.length <= 5;
-            if (isNumericHeavy && !topLines.includes(cleanItemName)) {
-                score -= 2000;
-            }
-
-            // Global vs Guide weight
-            if (isGlobal) score *= 0.8;
-
-            return score;
+            if (isGlobal) itemMaxScore *= 0.9;
+            return itemMaxScore;
         }
 
         // Pass 1: Guide
         for (let section in D2R_DATA) {
             D2R_DATA[section].items.forEach(item => {
-                const names = item.name.replace(/[()]/g, '/').split('/').map(n => n.trim().replace(/\s+/g, '')).filter(n => n.length >= 2);
-                names.forEach(name => {
-                    const score = calculateScore(name, false);
-                    if (score > maxScore && score > 0) {
-                        maxScore = score;
-                        bestMatch = item;
-                        matchIsGlobal = false;
-                    }
-                });
+                const score = calculateScore(item, false);
+                if (score > maxScore && score > 0) {
+                    maxScore = score;
+                    bestMatch = item;
+                    matchIsGlobal = false;
+                }
             });
         }
 
@@ -287,7 +310,8 @@ function initApp() {
             diagnosisResult.classList.add('hidden');
             previewImg.classList.add('hidden');
             previewImg.src = '';
-            document.querySelector('.drop-zone-content').classList.remove('hidden');
+            const dropZoneContent = document.querySelector('.drop-zone-content');
+            if (dropZoneContent) dropZoneContent.classList.remove('hidden');
         });
     }
 
