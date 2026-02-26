@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Data & State Initialization
     let currentSection = 'uniques';
     const cardGrid = document.getElementById('card-grid');
     const searchInput = document.getElementById('search-input');
@@ -6,18 +7,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const sectionTitle = document.getElementById('section-title');
     const sectionDesc = document.getElementById('section-desc');
 
-    // Navigation Elements
+    // 2. Navigation Elements (Diagnosis View)
     const diagnosisSection = document.getElementById('diagnosis-section');
     const contentHeader = document.querySelector('.content-header');
-    const dropZone = document.getElementById('drop-zone');
     const previewImg = document.getElementById('preview-img');
     const diagnosisResult = document.getElementById('diagnosis-result');
     const resultBody = document.getElementById('result-body');
     const mainView = document.getElementById('main-view');
 
+    // 3. UI Logic Functions
     function renderItems(filter = '') {
         const data = D2R_DATA[currentSection];
-        if (!data) return;
+        if (!data || !cardGrid) return;
 
         sectionTitle.textContent = data.title;
         sectionDesc.textContent = data.desc;
@@ -70,11 +71,20 @@ document.addEventListener('DOMContentLoaded', () => {
             diagnosisSection.classList.add('hidden');
             contentHeader.classList.remove('hidden');
             mainView.classList.remove('hidden');
-            renderItems();
+            renderItems(searchInput.value);
         }
     }
 
-    // Navigation Logic
+    // 4. Event Listeners Initialization
+
+    // Search Listener
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            renderItems(e.target.value);
+        });
+    }
+
+    // Navigation Listeners
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
             navLinks.forEach(l => l.classList.remove('active'));
@@ -85,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- Smart Diagnosis Logic ---
+    // Smart Diagnosis (Paste) Listener
     window.addEventListener('paste', (e) => {
         if (currentSection !== 'diagnosis') return;
 
@@ -104,7 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 reader.onload = (event) => {
                     previewImg.src = event.target.result;
                     previewImg.classList.remove('hidden');
-                    document.querySelector('.drop-zone-content').classList.add('hidden');
+                    const dropZoneContent = document.querySelector('.drop-zone-content');
+                    if (dropZoneContent) dropZoneContent.classList.add('hidden');
                     startAnalysis();
                 };
                 reader.onerror = () => {
@@ -116,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function startAnalysis() {
+        if (!diagnosisResult || !resultBody) return;
         diagnosisResult.classList.remove('hidden');
         resultBody.innerHTML = `
             <div class="analysis-item">
@@ -133,11 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // Search Logic
-    searchInput.addEventListener('input', (e) => {
-        renderItems(e.target.value);
-    });
-
-    // Initial render
+    // 5. Initial Render
     updateVisibility();
 });
