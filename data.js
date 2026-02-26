@@ -12,7 +12,7 @@ const D2R_DATA = {
             { category: "戒指", name: "拿各的戒指 (拿各 | 飾品)", stats: "MF 25%~30%", note: "30% 滿值才有交易價值。", tag: "special" },
             { category: "戒指", name: "喬丹之石 (喬丹 | 飾品)", stats: "必留", note: "法系神戒，召喚地表暗黑標的物。", tag: "high" },
             { category: "戒指", name: "烏鴉之霜 (烏鴉 | 飾品)", stats: "敏捷 20 / 準確 240+", note: "無法冰凍，敏捷/準確滿值最貴。", tag: "keep" },
-            { category: "戒指", name: "布爾凱索之戒 (布戒 | 飾品)", stats: "技能、吸血", note: "物理系常用技能戒。", tag: "keep" },
+            { category: "戒指", name: "布爾凱索的婚戒 (布戒 | 飾品)", stats: "技能、吸血", note: "物理系常用技能戒。又稱布爾凱索之戒。", tag: "keep" },
             { category: "珠寶", name: "彩虹刻面 (彩虹刻面 | 飾品)", stats: "5/5 滿值 / 電系", note: "電系最貴；「死珠」優於「生珠」。", tag: "high" },
 
             // 盾牌
