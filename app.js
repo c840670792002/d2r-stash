@@ -53,10 +53,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Initial render
-    renderItems();
+    // Initial State Check
+    function updateVisibility() {
+        if (currentSection === 'diagnosis') {
+            diagnosisSection.classList.remove('hidden');
+            contentHeader.classList.add('hidden');
+            mainView.classList.add('hidden');
+        } else {
+            diagnosisSection.classList.add('hidden');
+            contentHeader.classList.remove('hidden');
+            mainView.classList.remove('hidden');
+            renderItems();
+        }
+    }
 
-    // Navigation Logic
+    // Initial render
+    updateVisibility();
     const diagnosisSection = document.getElementById('diagnosis-section');
     const contentHeader = document.querySelector('.content-header');
     const dropZone = document.getElementById('drop-zone');
@@ -91,19 +103,35 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('paste', (e) => {
         if (currentSection !== 'diagnosis') return;
 
-        const items = e.clipboardData.items;
+        console.log('Paste event detected');
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        let foundImage = false;
+
         for (let i = 0; i < items.length; i++) {
             if (items[i].type.indexOf('image') !== -1) {
+                foundImage = true;
                 const blob = items[i].getAsFile();
                 const reader = new FileReader();
+
+                // Show immediate feedback
+                resultBody.innerHTML = '<div class="analysis-item"><p>⏳ 正在讀取截圖數據...</p></div>';
+                diagnosisResult.classList.remove('hidden');
+
                 reader.onload = (event) => {
                     previewImg.src = event.target.result;
                     previewImg.classList.remove('hidden');
                     document.querySelector('.drop-zone-content').classList.add('hidden');
                     startAnalysis();
                 };
+                reader.onerror = () => {
+                    resultBody.innerHTML = '<div class="analysis-item"><p>❌ 讀取圖片失敗，請再試一次。</p></div>';
+                };
                 reader.readAsDataURL(blob);
             }
+        }
+
+        if (!foundImage) {
+            console.log('No image found in clipboard');
         }
     });
 
