@@ -112,25 +112,36 @@ document.addEventListener('DOMContentLoaded', () => {
         let bestMatch = null;
         let maxScore = 0;
 
-        // Fuzzy match: Score based on how many characters of item name appear in OCR text
+        // Advanced matching: Prioritize exact substrings and longer matches
         for (let section in D2R_DATA) {
             D2R_DATA[section].items.forEach(item => {
-                const pureName = item.name.split(' (')[0].replace(/\s+/g, '');
-                let matchCount = 0;
+                // Extract possible sub-names from "Name (Alias/Alias)" format
+                const names = item.name.replace(/[()]/g, '/').split('/').map(n => n.trim().replace(/\s+/g, '')).filter(n => n.length >= 2);
 
-                // Count how many unique characters of the item name exist in the found text
-                const uniqueChars = [...new Set(pureName.split(''))];
-                uniqueChars.forEach(char => {
-                    if (normalizedText.includes(char)) matchCount++;
+                names.forEach(name => {
+                    if (normalizedText.includes(name)) {
+                        // Priority 1: Exact substring match found. Score = 100 + length
+                        const score = 100 + name.length;
+                        if (score > maxScore) {
+                            maxScore = score;
+                            bestMatch = item;
+                        }
+                    } else {
+                        // Priority 2: Character overlap scoring (fallback)
+                        let matchCount = 0;
+                        const uniqueChars = [...new Set(name.split(''))];
+                        uniqueChars.forEach(char => {
+                            if (normalizedText.includes(char)) matchCount++;
+                        });
+                        const score = (matchCount / uniqueChars.length) * 80; // Penalize non-substring matches
+
+                        // Strict threshold for non-exact matches to avoid false positives
+                        if (score > maxScore && score > 75 && name.length >= 3) {
+                            maxScore = score;
+                            bestMatch = item;
+                        }
+                    }
                 });
-
-                const score = (matchCount / uniqueChars.length) * 100;
-
-                // We need a threshold (e.g., 70% match and at least 3 chars)
-                if (score > maxScore && score > 70 && pureName.length >= 2) {
-                    maxScore = score;
-                    bestMatch = item;
-                }
             });
         }
 
