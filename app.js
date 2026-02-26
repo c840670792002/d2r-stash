@@ -119,23 +119,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 const names = item.name.replace(/[()]/g, '/').split('/').map(n => n.trim().replace(/\s+/g, '')).filter(n => n.length >= 2);
 
                 names.forEach(name => {
-                    if (normalizedText.includes(name)) {
-                        // Priority 1: Exact substring match found. Score = 100 + length
-                        const score = 100 + name.length;
+                    // Normalize comparison: remove symbols for better string matching
+                    const cleanItemName = name.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+                    const cleanOCRText = normalizedText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+
+                    if (cleanOCRText.includes(cleanItemName)) {
+                        // Priority 1: Substring match found. Score = 200 + length
+                        const score = 200 + cleanItemName.length;
                         if (score > maxScore) {
                             maxScore = score;
                             bestMatch = item;
                         }
                     } else {
-                        // Priority 2: Character overlap scoring (fallback)
+                        // Priority 2: Character overlap scoring (Focus on non-numeric characters)
+                        // This prevents small charms with numbers (like 3/20/20) from matching Magefist tooltip
+                        const textChars = cleanItemName.replace(/[0-9]/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
+                        if (textChars.length < 2) return;
+
                         let matchCount = 0;
-                        const uniqueChars = [...new Set(name.split(''))];
+                        const uniqueChars = [...new Set(textChars.split(''))];
                         uniqueChars.forEach(char => {
                             if (normalizedText.includes(char)) matchCount++;
                         });
-                        const score = (matchCount / uniqueChars.length) * 80;
+                        const score = (matchCount / uniqueChars.length) * 100;
 
-                        if (score > maxScore && score > 75 && name.length >= 3) {
+                        if (score > maxScore && score >= 80) {
                             maxScore = score;
                             bestMatch = item;
                         }
@@ -175,7 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <hr style="opacity: 0.1; margin: 0.5rem 0;">
                         <p><span class="analysis-label">筆記：</span>${bestMatch.note}</p>
                     </div>
-                    <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary);">提示：OCR 僅辨識品名，詳細變量請手動對照指南。</p>
                 </div>
             `;
         } else {
