@@ -12,7 +12,7 @@ const D2R_DATA = {
             { category: "戒指", name: "拿各的戒指 (拿各 | 飾品)", stats: "MF 25%~30%", note: "30% 滿值才有交易價值。", tag: "special" },
             { category: "戒指", name: "喬丹之石 (喬丹 | 飾品)", stats: "必留", note: "法系神戒，召喚地表暗黑標的物。", tag: "high" },
             { category: "戒指", name: "烏鴉之霜 (烏鴉 | 飾品)", stats: "敏捷 20 / 準確 240+", note: "無法冰凍，敏捷/準確滿值最貴。", tag: "keep" },
-            { category: "戒指", name: "布爾凱索的婚戒 (布戒 | 飾品)", stats: "技能、吸血", note: "物理系常用技能戒。又稱布爾凱索之戒。", tag: "keep" },
+            { category: "戒指", name: "布爾凱索的婚戒 (布戒 | BK / 婚戒)", stats: "技能、吸血", note: "物理系常用技能戒。又稱布爾凱索之戒。", tag: "keep" },
             { category: "珠寶", name: "彩虹刻面 (彩虹刻面 | 飾品)", stats: "5/5 滿值 / 電系", note: "電系最貴；「死珠」優於「生珠」。", tag: "high" },
 
             // 盾牌
@@ -43,7 +43,7 @@ const D2R_DATA = {
 
             // 手套、腰帶與鞋子
             { category: "手套", name: "運氣守護 (鎖鏈手套 | 普通)", stats: "MF 35%~40%", note: "40% 頂值具交易價值。", tag: "keep" },
-            { category: "手套", name: "法師拳 (輕型鐵手套 | 普通)", stats: "30% ED (滿值)", note: "法系必備，頂 ED 才值錢。", tag: "keep" },
+            { category: "手套", name: "法師之拳 (法師拳 | 輕型鐵手套)", stats: "30% ED (滿值)", note: "法系必計畢業手套。頂 ED 才值錢。", tag: "keep" },
             { category: "手套", name: "德古拉之握 (吸血鬼骸骨手套 | 精華)", stats: "15力 / 10%吸血", note: "打火炬必備「偷取生命」。", tag: "keep" },
             { category: "手套", name: "碎鋼 (食人魔鐵手套 | 精華)", stats: "60% ED / 20力", note: "物理畢業，極難掉落。", tag: "high" },
             { category: "腰帶", name: "長耳之串 (魔皮勳帶 | 卓越)", stats: "15% 減傷 / 8% 吸血", note: "高減傷版本，物理 survivability。", tag: "keep" },
