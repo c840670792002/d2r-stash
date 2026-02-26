@@ -86,13 +86,19 @@
     <!-- Scripts -->
     <!-- Scripts with Cache-Busting -->
     <script>
-        const scripts = ['data.js', 'unique_names.js', 'app.js'];
-        const version = Date.now();
-        scripts.forEach(src => {
-            const script = document.createElement('script');
-            script.src = `${src}?v=${version}`;
-            document.body.appendChild(script);
-        });
+        (async () => {
+            const scripts = ['data.js', 'unique_names.js', 'app.js'];
+            const version = Date.now();
+            for (const src of scripts) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = `${src}?v=${version}`;
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.body.appendChild(script);
+                });
+            }
+        })();
     </script>
 </body>
 

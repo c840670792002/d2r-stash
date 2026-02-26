@@ -3,7 +3,7 @@
  * Automated Diagnosis via OCR (Tesseract.js)
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
     // --- 1. State Management ---
     let currentSection = 'uniques';
 
@@ -292,4 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateVisibility();
-});
+}
+
+// Immediate execution if DOM is ready, otherwise wait
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
