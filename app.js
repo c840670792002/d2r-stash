@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let bestMatch = null;
         let maxScore = 0;
 
-        // Advanced matching: Prioritize exact substrings and longer matches
+        // Primary match: Guide items (D2R_DATA)
         for (let section in D2R_DATA) {
             D2R_DATA[section].items.forEach(item => {
                 // Extract possible sub-names from "Name (Alias/Alias)" format
@@ -133,9 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         uniqueChars.forEach(char => {
                             if (normalizedText.includes(char)) matchCount++;
                         });
-                        const score = (matchCount / uniqueChars.length) * 80; // Penalize non-substring matches
+                        const score = (matchCount / uniqueChars.length) * 80;
 
-                        // Strict threshold for non-exact matches to avoid false positives
                         if (score > maxScore && score > 75 && name.length >= 3) {
                             maxScore = score;
                             bestMatch = item;
@@ -145,12 +144,33 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Secondary match: Global unique dictionary (if not in guide)
+        let isGlobalMatch = false;
+        if (!bestMatch && typeof D2R_ALL_UNIQUES !== 'undefined') {
+            D2R_ALL_UNIQUES.forEach(name => {
+                const cleanName = name.replace(/\s+/g, '');
+                if (normalizedText.includes(cleanName)) {
+                    if (cleanName.length + 50 > maxScore) {
+                        maxScore = cleanName.length + 50;
+                        bestMatch = {
+                            name: name,
+                            tag: 'none',
+                            stats: '這是一件獨特 (暗金) 裝備，但「保留指南」中未列出具體數值基準。',
+                            note: '這通常代表該裝備屬於過渡性質，或市場價值較低。建議自用或販售給 NPC。'
+                        };
+                        isGlobalMatch = true;
+                    }
+                }
+            });
+        }
+
         if (bestMatch) {
+            const isGuideItem = !isGlobalMatch;
             resultBody.innerHTML = `
                 <div class="analysis-item">
-                    <p><span class="analysis-label">識別結果：</span><span class="status-keep">${bestMatch.name.split(' (')[0]}</span></p>
-                    <div class="match-box">
-                        <p><span class="analysis-label">指南建議：</span>${bestMatch.tag === 'high' ? '🔥 價值極高，務必保留！' : '✅ 建議保留'}</p>
+                    <p><span class="analysis-label">識別結果：</span><span class="${isGuideItem ? 'status-keep' : ''}">${bestMatch.name.split(' (')[0]}</span></p>
+                    <div class="match-box" ${isGlobalMatch ? 'style="border-color: #666;"' : ''}>
+                        <p><span class="analysis-label">指南建議：</span>${isGuideItem ? (bestMatch.tag === 'high' ? '🔥 價值極高，務必保留！' : '✅ 建議保留') : '⚪ 指南未收錄'}</p>
                         <p><span class="analysis-label">關鍵變量：</span>${bestMatch.stats}</p>
                         <hr style="opacity: 0.1; margin: 0.5rem 0;">
                         <p><span class="analysis-label">筆記：</span>${bestMatch.note}</p>
@@ -162,11 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
             resultBody.innerHTML = `
                 <div class="analysis-item">
                     <p>🔍 <span class="analysis-label">未匹配到特定裝備</span></p>
-                    <p>我未能從截圖中辨識出高價值暗金或套裝的名稱。</p>
+                    <p>我未能從截圖中辨識出已知的高價值暗金、套裝或常見暗金名稱。</p>
                     <div class="match-box" style="border-color: #ff4444;">
                         <p><strong>可能原因：</strong></p>
                         <ul style="margin-left: 1.5rem; font-size: 0.9rem;">
-                            <li>這是一件過渡用的普通裝備（指南已剔除）。</li>
+                            <li>這是一件過渡用的普通裝備。</li>
                             <li>截圖字體太模糊或背景干擾過強。</li>
                             <li>這是一件「黃色或藍色」極品，需參閱戒指/咒符鑑定標準。</li>
                         </ul>
