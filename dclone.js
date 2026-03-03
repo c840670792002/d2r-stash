@@ -19,6 +19,7 @@ window.DCloneTracker = (function () {
 
     // Elements
     let selectLadder, selectHc, selectVer, toggleNotify, statusBox;
+    let btnTestAudio;
     let regionCards = {};
 
     // Audio Context (created on user interaction)
@@ -41,6 +42,7 @@ window.DCloneTracker = (function () {
         selectVer = document.getElementById('dclone-ver'); /* Added Version Filter */
         toggleNotify = document.getElementById('dclone-notify');
         statusBox = document.getElementById('dclone-status');
+        btnTestAudio = document.getElementById('dclone-test-audio');
 
         regionCards[1] = document.getElementById('region-1'); // Americas
         regionCards[2] = document.getElementById('region-2'); // Europe
@@ -53,6 +55,18 @@ window.DCloneTracker = (function () {
         selectHc.addEventListener('change', handleFilterChange);
         selectVer.addEventListener('change', handleFilterChange); /* Added Version Filter Event */
         toggleNotify.addEventListener('change', handleNotifyToggle);
+
+        if (btnTestAudio) {
+            btnTestAudio.addEventListener('click', () => {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                playBeepSound();
+            });
+        }
 
         isInitialized = true;
 
