@@ -17,7 +17,7 @@ window.DCloneTracker = (function () {
     let hasAlertedForCurrentHighStage = false;
 
     // Elements
-    let selectLadder, selectHc, toggleNotify, statusBox;
+    let selectLadder, selectHc, selectVer, toggleNotify, statusBox;
     let regionCards = {};
 
     // Audio Context (created on user interaction)
@@ -37,6 +37,7 @@ window.DCloneTracker = (function () {
 
         selectLadder = document.getElementById('dclone-ladder');
         selectHc = document.getElementById('dclone-hc');
+        selectVer = document.getElementById('dclone-ver'); /* Added Version Filter */
         toggleNotify = document.getElementById('dclone-notify');
         statusBox = document.getElementById('dclone-status');
 
@@ -44,11 +45,12 @@ window.DCloneTracker = (function () {
         regionCards[2] = document.getElementById('region-2'); // Europe
         regionCards[3] = document.getElementById('region-3'); // Asia
 
-        if (!selectLadder || !selectHc || !toggleNotify) return;
+        if (!selectLadder || !selectHc || !selectVer || !toggleNotify) return;
 
         // Event Listeners
         selectLadder.addEventListener('change', handleFilterChange);
         selectHc.addEventListener('change', handleFilterChange);
+        selectVer.addEventListener('change', handleFilterChange); /* Added Version Filter Event */
         toggleNotify.addEventListener('change', handleNotifyToggle);
 
         isInitialized = true;
@@ -127,9 +129,10 @@ window.DCloneTracker = (function () {
     async function fetchData() {
         const ladderParam = selectLadder.value;
         const hcParam = selectHc.value;
+        const verParam = selectVer.value; /* Grab version parameter */
 
         // We don't send region param so we get all 3 regions at once
-        const url = `${API_URL}?ladder=${ladderParam}&hc=${hcParam}`;
+        const url = `${API_URL}?ladder=${ladderParam}&hc=${hcParam}&ver=${verParam}`;
 
         regionCards[1].querySelector('.region-msg').textContent = "載入中...";
         regionCards[2].querySelector('.region-msg').textContent = "載入中...";
