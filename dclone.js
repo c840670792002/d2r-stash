@@ -138,7 +138,14 @@ window.DCloneTracker = (function () {
         try {
             console.log(`[D-Clone] Fetching data from: ${url}`);
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            if (!response.ok) {
+                // Handle specific HTTP errors, especially 429 Too Many Requests (Cloudflare 1015)
+                if (response.status === 429 || response.status === 403) {
+                    throw new Error("RATE_LIMIT");
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
 
@@ -154,11 +161,18 @@ window.DCloneTracker = (function () {
 
         } catch (error) {
             console.error("[D-Clone Tracker Error]", error);
-            const errorMsg = "❌ 無法取得最新資料。API可能暫時無法連線。";
+
+            let errorMsg = "❌ 無法取得最新資料。API可能暫時無法連線。";
+            if (error.message === "RATE_LIMIT") {
+                errorMsg = "⚠️ 請求過於頻繁 (Error 1015)。請稍後再試。";
+                showMessage(`目前遭到網站阻擋 (Error 1015)。請等待一陣子後再試。`);
+            } else {
+                showMessage(`API 連線錯誤，系統將稍後自動重試。`);
+            }
+
             regionCards[1].querySelector('.region-msg').textContent = errorMsg;
             regionCards[2].querySelector('.region-msg').textContent = errorMsg;
             regionCards[3].querySelector('.region-msg').textContent = errorMsg;
-            showMessage(`API 連線錯誤，系統將稍後自動重試。`);
         }
     }
 
