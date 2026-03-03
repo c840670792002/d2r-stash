@@ -19,6 +19,7 @@ function initApp() {
     const sectionDesc = document.getElementById('section-desc');
 
     const diagnosisSection = document.getElementById('diagnosis-section');
+    const dcloneSection = document.getElementById('dclone-section');
     const contentHeader = document.querySelector('.content-header');
     const diagnosisResult = document.getElementById('diagnosis-result');
     const resultBody = document.getElementById('result-body');
@@ -28,13 +29,14 @@ function initApp() {
 
     // --- 3. Rendering Engine ---
     function renderItems(filter = '') {
-        if (!cardGrid || !D2R_DATA) return;
+        const tableBody = document.getElementById('table-body');
+        if (!tableBody || !D2R_DATA) return;
 
         const data = D2R_DATA[currentSection];
         if (data) {
             if (sectionTitle) sectionTitle.textContent = data.title;
             if (sectionDesc) sectionDesc.textContent = data.desc;
-            cardGrid.innerHTML = '';
+            tableBody.innerHTML = '';
 
             const filteredItems = data.items.filter(item =>
                 item.name.toLowerCase().includes(filter.toLowerCase()) ||
@@ -49,24 +51,25 @@ function initApp() {
             });
 
             Object.keys(groups).forEach(category => {
-                const header = document.createElement('div');
-                header.className = 'category-group-header';
-                header.innerHTML = `<h3>--- ${category} ---</h3>`;
-                cardGrid.appendChild(header);
+                const groupRow = document.createElement('tr');
+                groupRow.className = 'group-row';
+                groupRow.innerHTML = `<td colspan="4">${category}</td>`;
+                tableBody.appendChild(groupRow);
 
                 groups[category].forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'item-card';
+                    const row = document.createElement('tr');
                     const tagLabelMap = { 'high': '高價', 'keep': '必留', 'special': '特殊', '收藏': '收藏' };
                     const tagLabel = tagLabelMap[item.tag] || '保留';
                     const tagClass = `tag-${item.tag || 'keep'}`;
-                    card.innerHTML = `
-                        <div class="card-tag ${tagClass}">${tagLabel}</div>
-                        <div class="item-name">${item.name}</div>
-                        <div class="item-stats">${item.stats.replace(/\\n/g, '<br>')}</div>
-                        <div class="item-notes">${item.note.replace(/\\n/g, '<br>')}</div>
+                    row.innerHTML = `
+                        <td><div class="card-tag ${tagClass}">${tagLabel}</div></td>
+                        <td>
+                            <div class="item-name">${item.name}</div>
+                        </td>
+                        <td class="item-stats">${item.stats.replace(/\\n/g, '<br>')}</td>
+                        <td class="item-notes">${item.note.replace(/\\n/g, '<br>')}</td>
                     `;
-                    cardGrid.appendChild(card);
+                    tableBody.appendChild(row);
                 });
             });
         }
@@ -78,22 +81,21 @@ function initApp() {
             );
 
             if (globalResults.length > 0) {
-                const globalHeader = document.createElement('div');
-                globalHeader.className = 'category-group-header';
-                globalHeader.innerHTML = `<h3>--- 全量暗金資料庫 (指南未收錄) ---</h3>`;
-                cardGrid.appendChild(globalHeader);
+                const globalRow = document.createElement('tr');
+                globalRow.className = 'group-row';
+                globalRow.innerHTML = `<td colspan="4">全量暗金資料庫 (指南未收錄)</td>`;
+                tableBody.appendChild(globalRow);
 
                 globalResults.forEach(name => {
-                    const card = document.createElement('div');
-                    card.className = 'item-card';
-                    card.style.opacity = '0.7';
-                    card.innerHTML = `
-                        <div class="card-tag" style="background: #555;">未收錄</div>
-                        <div class="item-name">${name}</div>
-                        <div class="item-stats">這是一件暗金裝備，但在此指南中被評定為「過渡/無交易價值」。</div>
-                        <div class="item-notes">建議用途：拓荒自用、NPC 換錢、或作外觀收藏。</div>
+                    const row = document.createElement('tr');
+                    row.style.opacity = '0.7';
+                    row.innerHTML = `
+                        <td><div class="card-tag" style="background: #555;">未收錄</div></td>
+                        <td><div class="item-name">${name}</div></td>
+                        <td class="item-stats">這是一件暗金裝備，但在此指南中被評定為「過渡/無交易價值」。</td>
+                        <td class="item-notes">建議用途：拓荒自用、NPC 換錢、或作外觀收藏。</td>
                     `;
-                    cardGrid.appendChild(card);
+                    tableBody.appendChild(row);
                 });
             }
         }
@@ -101,14 +103,23 @@ function initApp() {
 
     // --- 4. Visibility Controller ---
     function updateVisibility() {
-        if (!diagnosisSection || !contentHeader || !mainView) return;
+        if (!diagnosisSection || !dcloneSection || !contentHeader || !mainView) return;
+
+        // Hide all sections first
+        diagnosisSection.classList.add('hidden');
+        dcloneSection.classList.add('hidden');
+        contentHeader.classList.add('hidden');
+        mainView.classList.add('hidden');
 
         if (currentSection === 'diagnosis') {
             diagnosisSection.classList.remove('hidden');
-            contentHeader.classList.add('hidden');
-            mainView.classList.add('hidden');
+        } else if (currentSection === 'dclone') {
+            dcloneSection.classList.remove('hidden');
+            // Trigger initial fetch if DClone module is loaded
+            if (window.DCloneTracker && typeof window.DCloneTracker.init === 'function') {
+                window.DCloneTracker.init();
+            }
         } else {
-            diagnosisSection.classList.add('hidden');
             contentHeader.classList.remove('hidden');
             mainView.classList.remove('hidden');
             renderItems(searchInput ? searchInput.value : '');

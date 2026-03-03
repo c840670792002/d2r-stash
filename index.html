@@ -26,6 +26,7 @@
                 <li data-section="sets">套裝指南</li>
                 <li data-section="rings">戒指鑑定</li>
                 <li data-section="charms">咒符與奇物</li>
+                <li data-section="dclone">👹 D-Clone 追蹤</li>
                 <li data-section="diagnosis">✨ 智慧診斷 (BETA)</li>
             </ul>
             <div class="sidebar-footer">
@@ -60,6 +61,83 @@
                 </div>
             </section>
 
+            <!-- D-Clone Tracker Section -->
+            <section id="dclone-section" class="hidden">
+                <div class="dclone-container">
+                    <div class="dclone-header">
+                        <h2>Diablo Clone 進度追蹤器</h2>
+                        <p>即時監控全服暗黑破壞神複製體 (狗) 出生進度。<br>
+                            <small>Data courtesy of <a href="https://diablo2.io/index.php" target="_blank"
+                                    style="color: var(--gold); text-decoration: underline;">diablo2.io</a></small>
+                        </p>
+                    </div>
+
+                    <div class="dclone-controls">
+                        <div class="filter-group">
+                            <label for="dclone-ladder">天梯模式:</label>
+                            <select id="dclone-ladder">
+                                <option value="1" selected>非天梯 (Non-Ladder)</option>
+                                <option value="2">天梯 (Ladder)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="dclone-hc">專家模式:</label>
+                            <select id="dclone-hc">
+                                <option value="1" selected>普通 (Softcore)</option>
+                                <option value="2">專家 (Hardcore)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group notify-group">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="dclone-notify">
+                                <span class="slider round"></span>
+                            </label>
+                            <span>自動更新 (65秒) & 語音提醒🔔</span>
+                        </div>
+                    </div>
+
+                    <div id="dclone-status" class="alert-box hidden">
+                        <!-- Messages like API loading, errors, or next update time -->
+                    </div>
+
+                    <div class="dclone-regions">
+                        <!-- Americas -->
+                        <div class="region-card" id="region-1">
+                            <h3>美服 (Americas)</h3>
+                            <div class="progress-container">
+                                <div class="progress-bar-bg">
+                                    <div class="progress-fill" style="width: 0%;"></div>
+                                </div>
+                                <div class="progress-text">進度: <span class="val">--</span>/6</div>
+                            </div>
+                            <div class="region-msg">等待資料中...</div>
+                        </div>
+                        <!-- Europe -->
+                        <div class="region-card" id="region-2">
+                            <h3>歐服 (Europe)</h3>
+                            <div class="progress-container">
+                                <div class="progress-bar-bg">
+                                    <div class="progress-fill" style="width: 0%;"></div>
+                                </div>
+                                <div class="progress-text">進度: <span class="val">--</span>/6</div>
+                            </div>
+                            <div class="region-msg">等待資料中...</div>
+                        </div>
+                        <!-- Asia -->
+                        <div class="region-card" id="region-3">
+                            <h3>亞服 (Asia)</h3>
+                            <div class="progress-container">
+                                <div class="progress-bar-bg">
+                                    <div class="progress-fill" style="width: 0%;"></div>
+                                </div>
+                                <div class="progress-text">進度: <span class="val">--</span>/6</div>
+                            </div>
+                            <div class="region-msg">等待資料中...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <header class="content-header">
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
@@ -76,8 +154,20 @@
                     <p id="section-desc">整理遊戲中值得保留的暗金裝備，標註關鍵屬性與建議數值。</p>
                 </div>
 
-                <div id="card-grid" class="grid-container">
-                    <!-- Cards will be injected here by JS -->
+                <div class="table-container">
+                    <table class="data-table" id="data-table">
+                        <thead>
+                            <tr>
+                                <th width="80px">建議</th>
+                                <th width="20%">裝備/底材名稱</th>
+                                <th width="30%">關鍵變量 / 屬性</th>
+                                <th width="40%">備註 / 用途</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Table rows will be injected here by JS -->
+                        </tbody>
+                    </table>
                 </div>
             </section>
         </main>
@@ -87,7 +177,7 @@
     <!-- Scripts with Cache-Busting -->
     <script>
         (async () => {
-            const scripts = ['data.js', 'unique_names.js', 'matcher.js', 'ocr_engine.js', 'app.js'];
+            const scripts = ['data.js', 'unique_names.js', 'matcher.js', 'ocr_engine.js', 'dclone.js', 'app.js'];
             const version = Date.now();
             for (const src of scripts) {
                 await new Promise((resolve, reject) => {
