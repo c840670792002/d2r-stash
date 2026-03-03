@@ -5,7 +5,8 @@
 
 window.DCloneTracker = (function () {
     // Config
-    const API_URL = 'https://diablo2.io/dclone_api.php';
+    // Use Cloudflare CORS Proxy to bypass Error 1015 / CORS issues
+    const API_URL = 'https://d-clone.tomcorn76.workers.dev/';
     const POLL_INTERVAL_MS = 65000; // 65 seconds (must be >= 60s as per API rules)
 
     // State
